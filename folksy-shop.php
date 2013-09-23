@@ -114,7 +114,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 			                                          'rewrite' => array( 'slug' => 'folksy',
 			                                                              'with_front' => false,
 			                                                              'feeds' => true, # We want feeds even though we don't want archives
-			                                                              'pages' => true ) );
+			                                                              'pages' => true ) ) );
 		
 		}
 	
