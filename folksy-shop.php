@@ -93,7 +93,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
 			register_post_type( 'folksy_item', array( 'labels' => array( 'name' => 'Folksy Listings',
 			                                                             'singular_name' => 'Folksy Listing',
-			                                                             'all_items' => 'All Listings'
+			                                                             'all_items' => 'All Listings',
 			                                                             'add_new_item' => 'Add New Listing',
 			                                                             'edit_item' => 'Edit Listing',
 			                                                             'new_item' => 'Add Listing',
