@@ -50,7 +50,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * Settings format version number this build of the plugin requires.
   */
 		const OPTIONS_VERSION = '1';
-		
+
  /* General settings and init functionality. */
 
  /**
@@ -63,34 +63,70 @@ if ( !class_exists( 'FolksyShop' ) ) {
  /* One off hooks and actions. */
 	 // Call activation method when activating the plugin...
 			register_activation_hook( __FILE__, array( &$this,  'activate' ) );
-		
+	 // Call deactivation method when deactivating the plugin...
+			register_deactivation_hook( __FILE__, array( &$this, 'deactivate' ) );
+
  /* Regular hooks and actions. */
 	 // Firstly it's important to create the item post type and category type...
-			add_action( 'init', array( &$this, 'create_folksy_types' ) );
-		
+			add_action( 'init', array( $this, 'create_folksy_types' ) );
+
+ /* Our own hooks. */
+	 // The hook for WP cron to update items from Folksy...
+			add_action( 'folksy-shop-update', array( $this, 'update_items_from_folksy' ) );
+			
 		}
-		
+
  /**
   * Activates the plugin.
 	*
 	* Flushes rewrite rules to make sure that the custom post type is available.
+	* Sets up the cron job to keep the shop items updated.
   *
   * @since 0.1
   */
 		function activate() {
 
-			create_folksy_types();
+	 // Post types and taxonomy...
+			$this->create_folksy_types();
 			flush_rewrite_rules();
+
+	 // WP cron...
+			wp_schedule_event( time(), 'hourly', 'folksy_shop_update' );
+
+		}
+
+ /**
+  * Deactivates the plugin.
+	*
+	* Turns off the WP cron.
+  *
+  * @since 0.1
+  */
+		function deactivate() {
+
+	 // WP cron...
+			wp_clear_scheduled_hook( 'folksy_shop_update' );
 
 		}
 		
+ /**
+  * Updates items using Folksy as the base source.
+  *
+  * @since 0.1
+  */
+		function update_items_from_folksy() {
+
+			//
+
+		}
+
  /**
   * Creates the Folksy item post type and taxonomy type.
   *
   * @since 0.1
   */
 		function create_folksy_types() {
-		
+
 			register_post_type( 'folksy_item', array( 'labels' => array( 'name' => 'Folksy Listings',
 			                                                             'singular_name' => 'Folksy Listing',
 			                                                             'all_items' => 'All Listings',
@@ -133,11 +169,11 @@ if ( !class_exists( 'FolksyShop' ) ) {
 			                                                                 'rewrite' => array( 'slug' => 'folksy-section',
 			                                                                                     'with_front' => false,
 			                                                                                     'hierarchical' => false ) ) );
-		
+
 		}
-	
+
 	}
-	
+
 	 // Create the class and get going...
 	new FolksyShop();
 
