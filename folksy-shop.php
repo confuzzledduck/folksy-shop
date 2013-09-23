@@ -59,14 +59,14 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * @since 0.1
   */
 		function __construct() {
-		
+
  /* One off hooks and actions. */
 	 // Call activation method when activating the plugin...
 			register_activation_hook( __FILE__, array( &$this,  'activate' ) );
 		
  /* Regular hooks and actions. */
-	 // Firstly it's important to create the item post type...
-			add_action( 'init', array( &$this, 'create_post_type' ) );
+	 // Firstly it's important to create the item post type and category type...
+			add_action( 'init', array( &$this, 'create_folksy_types' ) );
 		
 		}
 		
@@ -79,18 +79,18 @@ if ( !class_exists( 'FolksyShop' ) ) {
   */
 		function activate() {
 
-			create_post_type();
+			create_folksy_types();
 			flush_rewrite_rules();
 
 		}
 		
  /**
-  * Creates the Folksy item post type.
+  * Creates the Folksy item post type and taxonomy type.
   *
   * @since 0.1
   */
-		function create_post_type() {
-
+		function create_folksy_types() {
+		
 			register_post_type( 'folksy_item', array( 'labels' => array( 'name' => 'Folksy Listings',
 			                                                             'singular_name' => 'Folksy Listing',
 			                                                             'all_items' => 'All Listings',
@@ -102,7 +102,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 			                                                             'not_found' => 'No listings founs',
 			                                                             'not_found_in_trash' => 'No listings found in trash'),
 			                                          'description' => 'Items listed on Folksy',
-			                                          'public' => true, # Post type is not just for internal use
+			                                          'public' => false	, # Post type is not just for internal use
 			                                          'show_ui' => true, # This will probably change in due course to make items read-only
 			                                          'menu_position' => 20, # Put the menu item below Pages and above Comments
 			                                          'capability_type' => 'page', # For now we want this to behave like a page
@@ -115,9 +115,30 @@ if ( !class_exists( 'FolksyShop' ) ) {
 			                                                              'with_front' => false,
 			                                                              'feeds' => true, # We want feeds even though we don't want archives
 			                                                              'pages' => true ) ) );
+			register_taxonomy( 'folksy_store_section', 'folksy_item', array( 'labels' => array( 'name' => 'Shop Sections',
+			                                                                                    'singular_name' => 'Shop Section',
+			                                                                                    'menu_name' => 'Shop Sections',
+			                                                                                    'all_items' => 'All Sections',
+			                                                                                    'edit_item' => 'Edit Section',
+			                                                                                    'view_item' => 'View Section',
+			                                                                                    'update_item' => 'Update Section',
+			                                                                                    'add_new_item' => 'Add New Section',
+			                                                                                    'new_item_name' => 'New Section Name',
+			                                                                                    'search_items' => 'Search Sections',
+			                                                                                    'add_or_remove_items' => 'Add or remove sections' ),
+			                                                                 'public' => true,
+			                                                                 'show_tagcloud' => false,
+			                                                                 'hierarchical' => false, # Default, but let's be explicit
+			                                                                 'query_var' => 'folksy-section',
+			                                                                 'rewrite' => array( 'slug' => 'folksy-section',
+			                                                                                     'with_front' => false,
+			                                                                                     'hierarchical' => false ) ) );
 		
 		}
 	
 	}
+	
+	 // Create the class and get going...
+	new FolksyShop();
 
 }
