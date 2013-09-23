@@ -62,7 +62,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 		
  /* One off hooks and actions. */
 	 // Call activation method when activating the plugin...
-			register_activation_hook( __FILE__, array( &$this,  'activate' );
+			register_activation_hook( __FILE__, array( &$this,  'activate' ) );
 		
  /* Regular hooks and actions. */
 	 // Firstly it's important to create the item post type...
