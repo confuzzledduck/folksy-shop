@@ -60,9 +60,28 @@ if ( !class_exists( 'FolksyShop' ) ) {
   */
 		function __construct() {
 		
+ /* One off hooks and actions. */
+	 // Call activation method when activating the plugin...
+			register_activation_hook( __FILE__, array( &$this,  'activate' );
+		
+ /* Regular hooks and actions. */
 	 // Firstly it's important to create the item post type...
 			add_action( 'init', array( &$this, 'create_post_type' ) );
 		
+		}
+		
+ /**
+  * Activates the plugin.
+	*
+	* Flushes rewrite rules to make sure that the custom post type is available.
+  *
+  * @since 0.1
+  */
+		function activate() {
+
+			create_post_type();
+			flush_rewrite_rules();
+
 		}
 		
  /**
@@ -71,8 +90,31 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * @since 0.1
   */
 		function create_post_type() {
-		
-			register_post_type();
+
+			register_post_type( 'folksy_item', array( 'labels' => array( 'name' => 'Folksy Listings',
+			                                                             'singular_name' => 'Folksy Listing',
+			                                                             'all_items' => 'All Listings'
+			                                                             'add_new_item' => 'Add New Listing',
+			                                                             'edit_item' => 'Edit Listing',
+			                                                             'new_item' => 'Add Listing',
+			                                                             'view_item' => 'View Listing',
+			                                                             'search_items' => 'Search Listings',
+			                                                             'not_found' => 'No listings founs',
+			                                                             'not_found_in_trash' => 'No listings found in trash'),
+			                                          'description' => 'Items listed on Folksy',
+			                                          'public' => true, # Post type is not just for internal use
+			                                          'show_ui' => true, # This will probably change in due course to make items read-only
+			                                          'menu_position' => 20, # Put the menu item below Pages and above Comments
+			                                          'capability_type' => 'page', # For now we want this to behave like a page
+			                                          'hierarchical' => false,
+			                                          'supports' => array( 'author' => false,
+			                                                               'excerpt' => false,
+			                                                               'page-attrubutes' => false ),
+			                                          'has_archive' => false, # Just to be explicit
+			                                          'rewrite' => array( 'slug' => 'folksy',
+			                                                              'with_front' => false,
+			                                                              'feeds' => true, # We want feeds even though we don't want archives
+			                                                              'pages' => true ) );
 		
 		}
 	
