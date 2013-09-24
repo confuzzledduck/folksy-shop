@@ -50,6 +50,8 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * Settings format version number this build of the plugin requires.
   */
 		const OPTIONS_VERSION = '1';
+		
+		const FOLSKY_BASE_URL = 'http://folksy.com/';
 
  /* General settings and init functionality. */
 
@@ -58,7 +60,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   *
   * @since 0.1
   */
-		function __construct() {
+		public function __construct() {
 
  /* One off hooks and actions. */
 	 // Call activation method when activating the plugin...
@@ -84,7 +86,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   *
   * @since 0.1
   */
-		function activate() {
+		public function activate() {
 
 	 // Post types and taxonomy...
 			$this->create_folksy_types();
@@ -102,7 +104,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   *
   * @since 0.1
   */
-		function deactivate() {
+		public function deactivate() {
 
 	 // WP cron...
 			wp_clear_scheduled_hook( 'folksy_shop_update' );
@@ -114,9 +116,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   *
   * @since 0.1
   */
-		function update_items_from_folksy() {
-
-			//
+		public function update_items_from_folksy() {
 
 		}
 
@@ -125,7 +125,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   *
   * @since 0.1
   */
-		function create_folksy_types() {
+		public function create_folksy_types() {
 
 			register_post_type( 'folksy_item', array( 'labels' => array( 'name' => 'Folksy Listings',
 			                                                             'singular_name' => 'Folksy Listing',
@@ -172,6 +172,45 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
 		}
 
+ /**
+  * Fetches a JSON page from Folksy if one is available. If one is not available
+	* or the response (where it should have been available) cannot be understood
+	* then returns false.
+	*
+	* Currently Folksy provides JSON formats for /shop, /item and category listing
+	* (although we're not concerned about that).
+  *
+  * @since 0.1
+  */
+		protected function _fetchFolksyJson( $pagePath ) {
+		
+			if ( !empty( $pagePath ) ) {
+				$pagePath = ( substr( $pagePath, 0, 1 ) == '/' ) ? substr( $pagePath, 1 ) : $pagePath;
+				if ( $curlHandle = curl_init( self::FOLSKY_BASE_URL.$pagePath ) ) {
+
+					$curlOptions = array( CURLOPT_HEADER => false,
+					                      CURLOPT_RETURNTRANSFER => true,
+					                      CURLOPT_USERAGENT => 'Folksy Shop for WordPress (v'.self::PLUGIN_VERSION.')',
+					                      CURLOPT_HTTPHEADER => array( 'Accept: application/json, text/javascript, */*' ) );
+					curl_setopt_array( $curlHandle, $curlOptions );
+					
+					$rawJson = curl_exec( $curlHandle );
+					curl_close( $curlHandle );
+					
+					if ( $rawJson !== false && !empty( $rawJson )) {
+						$decodedResult = json_decode( $rawJson );
+						if ( $decodedResult !== null ) {
+							return $decodedResult;
+						}
+					}
+					
+				}
+			}
+			
+			return false;
+		
+		}
+		
 	}
 
 	 // Create the class and get going...
