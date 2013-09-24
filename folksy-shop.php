@@ -42,16 +42,20 @@ if ( !class_exists( 'FolksyShop' ) ) {
 	class FolksyShop {
 
  /**
+  * Base URL of the Folksy website to use when fetching data. Should include a
+	* trailing slash and protocol (ie http://).
+  */
+		const FOLSKY_BASE_URL = 'http://folksy.com/';
+	
+ /**
   * Plugin version number.
   */
-		const PLUGIN_VERSION = '0.2.1';
+		const PLUGIN_VERSION = '0.1';
 
  /**
   * Settings format version number this build of the plugin requires.
   */
 		const OPTIONS_VERSION = '1';
-		
-		const FOLSKY_BASE_URL = 'http://folksy.com/';
 
  /* General settings and init functionality. */
 
@@ -177,33 +181,36 @@ if ( !class_exists( 'FolksyShop' ) ) {
 	* or the response (where it should have been available) cannot be understood
 	* then returns false.
 	*
-	* Currently Folksy provides JSON formats for /shop, /item and category listing
-	* (although we're not concerned about that).
+	* Currently Folksy provides JSON formats for /shops, /items and category
+	* listing (although we're not concerned about that at this stage).
   *
   * @since 0.1
+	* @param string Path (from /) of page to fetch from Folksy.
   */
 		protected function _fetchFolksyJson( $pagePath ) {
 		
 			if ( !empty( $pagePath ) ) {
 				$pagePath = ( substr( $pagePath, 0, 1 ) == '/' ) ? substr( $pagePath, 1 ) : $pagePath;
-				if ( $curlHandle = curl_init( self::FOLSKY_BASE_URL.$pagePath ) ) {
+				if ( preg_match('/^shops|items/', $pagePath) ) {
+					if ( $curlHandle = curl_init( self::FOLSKY_BASE_URL.$pagePath ) ) {
 
-					$curlOptions = array( CURLOPT_HEADER => false,
-					                      CURLOPT_RETURNTRANSFER => true,
-					                      CURLOPT_USERAGENT => 'Folksy Shop for WordPress (v'.self::PLUGIN_VERSION.')',
-					                      CURLOPT_HTTPHEADER => array( 'Accept: application/json, text/javascript, */*' ) );
-					curl_setopt_array( $curlHandle, $curlOptions );
-					
-					$rawJson = curl_exec( $curlHandle );
-					curl_close( $curlHandle );
-					
-					if ( $rawJson !== false && !empty( $rawJson )) {
-						$decodedResult = json_decode( $rawJson );
-						if ( $decodedResult !== null ) {
-							return $decodedResult;
+						$curlOptions = array( CURLOPT_HEADER => false,
+						                      CURLOPT_RETURNTRANSFER => true,
+						                      CURLOPT_USERAGENT => 'Folksy Shop for WordPress (v'.self::PLUGIN_VERSION.')',
+						                      CURLOPT_HTTPHEADER => array( 'Accept: application/json, text/javascript, */*' ) );
+						curl_setopt_array( $curlHandle, $curlOptions );
+
+						$rawJson = curl_exec( $curlHandle );
+						curl_close( $curlHandle );
+
+						if ( $rawJson !== false && !empty( $rawJson )) {
+							$decodedResult = json_decode( $rawJson );
+							if ( $decodedResult !== null ) {
+								return $decodedResult;
+							}
 						}
+
 					}
-					
 				}
 			}
 			
@@ -214,6 +221,6 @@ if ( !class_exists( 'FolksyShop' ) ) {
 	}
 
 	 // Create the class and get going...
-	new FolksyShop();
+	$folksy = new FolksyShop();
 
 }
