@@ -43,7 +43,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
  /**
   * Base URL of the Folksy website to use when fetching data. Should include a
-	* trailing slash and protocol (ie http://).
+  * trailing slash and protocol (ie http://).
   */
 		const FOLSKY_BASE_URL = 'http://folksy.com/';
 	
@@ -84,9 +84,9 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
  /**
   * Activates the plugin.
-	*
-	* Flushes rewrite rules to make sure that the custom post type is available.
-	* Sets up the cron job to keep the shop items updated.
+  *
+  * Flushes rewrite rules to make sure that the custom post type is available.
+  * Sets up the cron job to keep the shop items updated.
   *
   * @since 0.1
   */
@@ -103,8 +103,8 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
  /**
   * Deactivates the plugin.
-	*
-	* Turns off the WP cron.
+  *
+  * Turns off the WP cron.
   *
   * @since 0.1
   */
@@ -178,14 +178,14 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
  /**
   * Fetches a JSON page from Folksy if one is available. If one is not available
-	* or the response (where it should have been available) cannot be understood
-	* then returns false.
-	*
-	* Currently Folksy provides JSON formats for /shops, /items and category
-	* listing (although we're not concerned about that at this stage).
+  * or the response (where it should have been available) cannot be understood
+  * then returns false.
+  *
+  * Currently Folksy provides JSON formats for /shops, /items and category
+  * listing (although we're not concerned about that at this stage).
   *
   * @since 0.1
-	* @param string Path (from /) of page to fetch from Folksy.
+  * @param string Path (from /) of page to fetch from Folksy.
   */
 		protected function _fetchFolksyJson( $pagePath ) {
 		
