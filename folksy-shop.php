@@ -185,38 +185,75 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * listing (although we're not concerned about that at this stage).
   *
   * @since 0.1
+  * @see FolksyShop::_fetchFolksyDocument
   * @param string $pagePath Path (from /) of page to fetch from Folksy.
   * @return object|boolean An object representing the Folksy JSON reponse, or false if the request failed.
   */
 		protected function _fetchFolksyJson( $pagePath ) {
 		
-			if ( !empty( $pagePath ) ) {
-				$pagePath = ( substr( $pagePath, 0, 1 ) == '/' ) ? substr( $pagePath, 1 ) : $pagePath;
-				if ( preg_match('/^shops|items/', $pagePath) ) {
-					if ( $curlHandle = curl_init( self::FOLSKY_BASE_URL.$pagePath ) ) {
-
-						$curlOptions = array( CURLOPT_HEADER => false,
-						                      CURLOPT_RETURNTRANSFER => true,
-						                      CURLOPT_USERAGENT => 'Folksy Shop for WordPress (v'.self::PLUGIN_VERSION.')',
-						                      CURLOPT_HTTPHEADER => array( 'Accept: application/json, text/javascript, */*' ) );
-						curl_setopt_array( $curlHandle, $curlOptions );
-
-						$rawJson = curl_exec( $curlHandle );
-						curl_close( $curlHandle );
-
-						if ( $rawJson !== false && !empty( $rawJson )) {
-							$decodedResult = json_decode( $rawJson );
-							if ( $decodedResult !== null ) {
-								return $decodedResult;
-							}
-						}
-
+			if ( $rawJson = $this->_fetchFolksyDocument( $pagePath, 'json' ) ) {
+				if ( $rawJson !== false && !empty( $rawJson )) {
+					$decodedResult = json_decode( $rawJson );
+					if ( $decodedResult !== null ) {
+						return $decodedResult;
 					}
 				}
 			}
 			
 			return false;
 		
+		}
+		
+ /**
+  * Fetches an HTML page from Folksy if one is available. If it is not available
+  * (ie. the page is a 404 error) then false is returned.
+  *
+  * @since 0.1
+  * @see FolksyShop::_fetchFolksyDocument
+  * @param string $pagePath Path (from /) of page to fetch from Folksy.
+  * @return string|boolean The contents of the page requested, or false if the request failed.
+  */
+		protected function _fetchFolksyHtml( $pagePath ) {
+
+			return $this->_fetchFolksyDocument( $pagePath );
+
+		}
+		
+ /**
+  * Fetches a document from Folksy if one is available. If it is not available
+  * (ie. the page is a 404 error or it was an invalid request in the first
+  * place) then false is returned.
+  *
+  * @since 0.1
+  * @param string $pagePath Path (from /) of page to fetch from Folksy.
+  * @return string|boolean The contents of the page requested, or false if the request failed.
+  */
+		protected function _fetchFolksyDocument( $pagePath, $accept = 'html' ) {
+
+			if ( !empty( $pagePath ) ) {
+				$pagePath = ( substr( $pagePath, 0, 1 ) == '/' ) ? substr( $pagePath, 1 ) : $pagePath;
+				if ( $curlHandle = curl_init( self::FOLSKY_BASE_URL.$pagePath ) ) {
+
+					$curlOptions = array( CURLOPT_HEADER => false,
+					                      CURLOPT_RETURNTRANSFER => true,
+					                      CURLOPT_USERAGENT => 'Folksy Shop for WordPress (v'.self::PLUGIN_VERSION.')' );
+					if ( 'json' == $accept ) {
+						$curlOptions[CURLOPT_HTTPHEADER] = array( 'Accept: application/json, text/javascript' );
+					} else {
+						$curlOptions[CURLOPT_HTTPHEADER] = array( 'Accept: text/html, application/xhtml+xml, application/xml' );
+					}
+					curl_setopt_array( $curlHandle, $curlOptions );
+
+					$rawResponse = curl_exec( $curlHandle );
+					curl_close( $curlHandle );
+
+					return $rawResponse;
+
+				}
+			}
+
+			return false;
+
 		}
 		
 	}
