@@ -185,7 +185,8 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * listing (although we're not concerned about that at this stage).
   *
   * @since 0.1
-  * @param string Path (from /) of page to fetch from Folksy.
+  * @param string $pagePath Path (from /) of page to fetch from Folksy.
+  * @return object|boolean An object representing the Folksy JSON reponse, or false if the request failed.
   */
 		protected function _fetchFolksyJson( $pagePath ) {
 		
