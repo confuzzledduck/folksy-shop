@@ -133,6 +133,22 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * @param string $shopname The name of the shop to fetch items from.
   */
 		public function fetchItems( $shopName ) {
+		
+			if ( $shopDetails = $this->_fetchFolksyJson( 'shops/'.$shopName ) ) {
+				$shopItemsArray = array();
+				foreach ( $shopDetails->shop->items AS $shopItem ) {
+					$thisItem = array();
+					foreach ($shopItem AS $key => $value) {
+						$thisItem[$key] = trim($value);
+					}
+					$shopItemsArray[] = $thisItem;
+				}
+				
+				return $shopItemsArray;
+
+			} else {
+				return false;
+			}
 
 		}
 
