@@ -74,11 +74,11 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
  /* Regular hooks and actions. */
 	 // Firstly it's important to create the item post type and category type...
-			add_action( 'init', array( $this, 'create_folksy_types' ) );
+			add_action( 'init', array( $this, 'createFolksyTypes' ) );
 
  /* Our own hooks. */
 	 // The hook for WP cron to update items from Folksy...
-			add_action( 'folksy-shop-update', array( $this, 'update_items' ), 10, 1 );
+			add_action( 'folksy-shop-update', array( $this, 'updateItems' ), 10, 1 );
 			
 		}
 
@@ -93,7 +93,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 		public function activate() {
 
 	 // Post types and taxonomy...
-			$this->create_folksy_types();
+			$this->createFolksyTypes();
 			flush_rewrite_rules();
 
 	 // WP cron...
@@ -119,10 +119,10 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * Fetches shop items from Folksy.
   *
   * @since 0.1
-  * @see FolksyShop::update_items
+  * @see FolksyShop::updateItems()
   * @param string $shopname The name of the shop to fetch items from.
   */
-		public function fetch_items( $shopName ) {
+		public function fetchItems( $shopName ) {
 
 		}
 
@@ -130,10 +130,10 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * Updates items using Folksy as the base source.
   *
   * @since 0.1
-  * @see FolksyShop::fetch_items
+  * @see FolksyShop::fetchItems
   * @param string $shopname The name of the shop to update items from.
   */
-		public function update_items( $shopName ) {
+		public function updateItems( $shopName ) {
 
 		}
 		
@@ -141,10 +141,10 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * Fetches shop sections from Folksy.
   *
   * @since 0.1
-  * @see FolksyShop::update_sections
+  * @see FolksyShop::updateSections()
   * @param string $shopname The name of the shop to update items from.
   */
-		public function fetch_sections( $shopName ) {
+		public function fetchSections( $shopName ) {
 		
 		}
 		
@@ -152,10 +152,10 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * Updates shop taxonomies from shop sections using Folksy as the base source.
   *
   * @since 0.1
-  * @see FolksyShop::fetch_sections
+  * @see FolksyShop::fetchSections()
   * @param string $shopname The name of the shop to update items from.
   */
-		public function fetch_sections( $shopName ) {
+		public function updateSections( $shopName ) {
 
 		}
 
@@ -164,7 +164,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   *
   * @since 0.1
   */
-		public function create_folksy_types() {
+		public function createFolksyTypes() {
 
 			register_post_type( 'folksy_item', array( 'labels' => array( 'name' => 'Folksy Listings',
 			                                                             'singular_name' => 'Folksy Listing',
