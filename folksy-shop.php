@@ -78,7 +78,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
  /* Our own hooks. */
 	 // The hook for WP cron to update items from Folksy...
-			add_action( 'folksy-shop-update', array( $this, 'update_items_from_folksy' ) );
+			add_action( 'folksy-shop-update', array( $this, 'update_items' ), 10, 1 );
 			
 		}
 
@@ -97,7 +97,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 			flush_rewrite_rules();
 
 	 // WP cron...
-			wp_schedule_event( time(), 'hourly', 'folksy_shop_update' );
+			//wp_schedule_event( time(), 'hourly', 'folksy_shop_update', array( 'tempShopName' ) );
 
 		}
 
@@ -114,13 +114,48 @@ if ( !class_exists( 'FolksyShop' ) ) {
 			wp_clear_scheduled_hook( 'folksy_shop_update' );
 
 		}
-		
+
+ /**
+  * Fetches shop items from Folksy.
+  *
+  * @since 0.1
+  * @see FolksyShop::update_items
+  * @param string $shopname The name of the shop to fetch items from.
+  */
+		public function fetch_items( $shopName ) {
+
+		}
+
  /**
   * Updates items using Folksy as the base source.
   *
   * @since 0.1
+  * @see FolksyShop::fetch_items
+  * @param string $shopname The name of the shop to update items from.
   */
-		public function update_items_from_folksy() {
+		public function update_items( $shopName ) {
+
+		}
+		
+ /**
+  * Fetches shop sections from Folksy.
+  *
+  * @since 0.1
+  * @see FolksyShop::update_sections
+  * @param string $shopname The name of the shop to update items from.
+  */
+		public function fetch_sections( $shopName ) {
+		
+		}
+		
+ /**
+  * Updates shop taxonomies from shop sections using Folksy as the base source.
+  *
+  * @since 0.1
+  * @see FolksyShop::fetch_sections
+  * @param string $shopname The name of the shop to update items from.
+  */
+		public function fetch_sections( $shopName ) {
 
 		}
 
