@@ -56,6 +56,16 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * Settings format version number this build of the plugin requires.
   */
 		const OPTIONS_VERSION = '1';
+		
+ /**
+  * The name of the taxonomy we create.
+  */
+		const TAXONOMY_NAME = 'folksy_store_section';
+
+ /**
+  * The name of the post type we create.
+  */
+		const POST_TYPE_NAME = 'folksy_item';
 
  /* General settings and init functionality. */
 
@@ -140,16 +150,37 @@ if ( !class_exists( 'FolksyShop' ) ) {
  /**
   * Fetches shop sections from Folksy.
   *
+  * Shop sections contain the name of the section (['title']) and the Folksy
+  * shop section ID (['id']).
+  *
   * @since 0.1
   * @see FolksyShop::updateSections()
   * @param string $shopname The name of the shop to update items from.
+  * @return array Details of the shop sections. If there are no sections then returns a blank array.
   */
 		public function fetchSections( $shopName ) {
+		
+			if ( $shopDetails = $this->_fetchFolksyJson( 'shops/'.$shopName ) ) {
+			
+				$shopSectionsArray = array();
+				foreach ( $shopDetails->shop->sections AS $shopSection ) {
+					$shopSectionsArray[] = array( 'id' => $shopSection->id,
+					                              'title' => $shopSection->title );
+				}
+				
+				return $shopSectionsArray;
+			
+			} else {
+				return false;
+			}
 		
 		}
 		
  /**
   * Updates shop taxonomies from shop sections using Folksy as the base source.
+	* The title of the shop section is used as the term itself, and we use the
+  * description field to hold the Folksy shop ID because we need this to match
+	* categories to items.
   *
   * @since 0.1
   * @see FolksyShop::fetchSections()
@@ -157,6 +188,21 @@ if ( !class_exists( 'FolksyShop' ) ) {
   */
 		public function updateSections( $shopName ) {
 
+			if ( $shopSections = $this->fetchSections( $shopName ) ) {
+
+				if ( count( $shopSections ) > 0 ) {
+					foreach ( $shopSections AS $shopSection ) {
+						$termExists = term_exists( $shopSection['title'], self::TAXONOMY_NAME );
+						if ( 0 == $termExists || null == $termExists ) {
+							wp_insert_term( $shopSection['title'], self::TAXONOMY_NAME, array( 'description' => $shopSection['id'] ) );
+						}
+					}
+				}
+
+			} else {
+				return false;
+			}
+		
 		}
 
  /**
@@ -166,48 +212,48 @@ if ( !class_exists( 'FolksyShop' ) ) {
   */
 		public function createFolksyTypes() {
 
-			register_post_type( 'folksy_item', array( 'labels' => array( 'name' => 'Folksy Listings',
-			                                                             'singular_name' => 'Folksy Listing',
-			                                                             'all_items' => 'All Listings',
-			                                                             'add_new_item' => 'Add New Listing',
-			                                                             'edit_item' => 'Edit Listing',
-			                                                             'new_item' => 'Add Listing',
-			                                                             'view_item' => 'View Listing',
-			                                                             'search_items' => 'Search Listings',
-			                                                             'not_found' => 'No listings founs',
-			                                                             'not_found_in_trash' => 'No listings found in trash'),
-			                                          'description' => 'Items listed on Folksy',
-			                                          'public' => false	, # Post type is not just for internal use
-			                                          'show_ui' => true, # This will probably change in due course to make items read-only
-			                                          'menu_position' => 20, # Put the menu item below Pages and above Comments
-			                                          'capability_type' => 'page', # For now we want this to behave like a page
-			                                          'hierarchical' => false,
-			                                          'supports' => array( 'author' => false,
-			                                                               'excerpt' => false,
-			                                                               'page-attrubutes' => false ),
-			                                          'has_archive' => false, # Just to be explicit
-			                                          'rewrite' => array( 'slug' => 'folksy',
-			                                                              'with_front' => false,
-			                                                              'feeds' => true, # We want feeds even though we don't want archives
-			                                                              'pages' => true ) ) );
-			register_taxonomy( 'folksy_store_section', 'folksy_item', array( 'labels' => array( 'name' => 'Shop Sections',
-			                                                                                    'singular_name' => 'Shop Section',
-			                                                                                    'menu_name' => 'Shop Sections',
-			                                                                                    'all_items' => 'All Sections',
-			                                                                                    'edit_item' => 'Edit Section',
-			                                                                                    'view_item' => 'View Section',
-			                                                                                    'update_item' => 'Update Section',
-			                                                                                    'add_new_item' => 'Add New Section',
-			                                                                                    'new_item_name' => 'New Section Name',
-			                                                                                    'search_items' => 'Search Sections',
-			                                                                                    'add_or_remove_items' => 'Add or remove sections' ),
-			                                                                 'public' => true,
-			                                                                 'show_tagcloud' => false,
-			                                                                 'hierarchical' => false, # Default, but let's be explicit
-			                                                                 'query_var' => 'folksy-section',
-			                                                                 'rewrite' => array( 'slug' => 'folksy-section',
-			                                                                                     'with_front' => false,
-			                                                                                     'hierarchical' => false ) ) );
+			register_post_type( self::POST_TYPE_NAME, array( 'labels' => array( 'name' => 'Folksy Listings',
+			                                                                    'singular_name' => 'Folksy Listing',
+			                                                                    'all_items' => 'All Listings',
+			                                                                    'add_new_item' => 'Add New Listing',
+			                                                                    'edit_item' => 'Edit Listing',
+			                                                                    'new_item' => 'Add Listing',
+			                                                                    'view_item' => 'View Listing',
+			                                                                    'search_items' => 'Search Listings',
+			                                                                    'not_found' => 'No listings founs',
+			                                                                    'not_found_in_trash' => 'No listings found in trash'),
+			                                                 'description' => 'Items listed on Folksy',
+			                                                 'public' => false	, # Post type is not just for internal use
+			                                                 'show_ui' => true, # This will probably change in due course to make items read-only
+			                                                 'menu_position' => 20, # Put the menu item below Pages and above Comments
+			                                                 'capability_type' => 'page', # For now we want this to behave like a page
+			                                                 'hierarchical' => false,
+			                                                 'supports' => array( 'author' => false,
+			                                                                      'excerpt' => false,
+			                                                                      'page-attrubutes' => false ),
+			                                                 'has_archive' => false, # Just to be explicit
+			                                                 'rewrite' => array( 'slug' => 'folksy',
+			                                                                     'with_front' => false,
+			                                                                     'feeds' => true, # We want feeds even though we don't want archives
+			                                                                     'pages' => true ) ) );
+			register_taxonomy( self::TAXONOMY_NAME, 'folksy_item', array( 'labels' => array( 'name' => 'Shop Sections',
+			                                                                                 'singular_name' => 'Shop Section',
+			                                                                                 'menu_name' => 'Shop Sections',
+			                                                                                 'all_items' => 'All Sections',
+			                                                                                 'edit_item' => 'Edit Section',
+			                                                                                 'view_item' => 'View Section',
+			                                                                                 'update_item' => 'Update Section',
+			                                                                                 'add_new_item' => 'Add New Section',
+			                                                                                 'new_item_name' => 'New Section Name',
+			                                                                                 'search_items' => 'Search Sections',
+			                                                                                 'add_or_remove_items' => 'Add or remove sections' ),
+			                                                              'public' => true,
+			                                                              'show_tagcloud' => false,
+			                                                              'hierarchical' => false, # Default, but let's be explicit
+			                                                              'query_var' => 'folksy-section',
+			                                                              'rewrite' => array( 'slug' => 'folksy-section',
+			                                                                                  'with_front' => false,
+			                                                                                  'hierarchical' => false ) ) );
 
 		}
 
