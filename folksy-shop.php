@@ -153,7 +153,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 		}
 
  /**
-  * Updates items using Folksy as the base source.
+  * Updates and inserts items using Folksy as the base source.
   *
   * @since 0.1
   * @see FolksyShop::fetchItems
@@ -161,6 +161,35 @@ if ( !class_exists( 'FolksyShop' ) ) {
   */
 		public function updateItems( $shopName ) {
 
+			if ( $shopItems = $this->fetchItems( $shopName ) ) {
+
+				if ( count( $shopItems ) > 0 ) {
+					$shopSections = get_terms( self::TAXONOMY_NAME, array( 'hide_empty' => false ) );
+					foreach ( $shopItems AS $shopItem ) {
+
+// Lookup the folksy ID in post meta.
+						if ( false ) {
+// Item exists, update it.
+						} else {
+	 // This is the first time we've seen this item, so let's insert it...
+							$pageId = wp_insert_post( array( 'post_content' => $shopItem['description'],
+							                                 'post_title' => $shopItem['title'],
+							                                 'post_status' => 'publish',
+							                                 'post_type' => self::POST_TYPE_NAME ) );
+							if ( $pageId > 0 ) {
+								//
+							}
+						}
+					
+					}
+				}
+				
+				return true;
+
+			} else {
+				return false;
+			}
+		
 		}
 		
  /**
@@ -214,6 +243,8 @@ if ( !class_exists( 'FolksyShop' ) ) {
 						}
 					}
 				}
+				
+				return true;
 
 			} else {
 				return false;
@@ -265,7 +296,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 			                                                                                 'add_or_remove_items' => 'Add or remove sections' ),
 			                                                              'public' => true,
 			                                                              'show_tagcloud' => false,
-			                                                              'hierarchical' => false, # Default, but let's be explicit
+			                                                              'hierarchical' => true,
 			                                                              'query_var' => 'folksy-section',
 			                                                              'rewrite' => array( 'slug' => 'folksy-section',
 			                                                                                  'with_front' => false,
