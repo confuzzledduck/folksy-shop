@@ -37,9 +37,9 @@
   */
 
 	 // If the class doesn't exist we want to make it...
-if ( !class_exists( 'FolksyShop' ) ) {
+if ( !class_exists( 'Folksy_Shop' ) ) {
 
-	class FolksyShop {
+	class Folksy_Shop {
 
  /**
   * Base URL of the Folksy website to use when fetching data. Should include a
@@ -84,11 +84,11 @@ if ( !class_exists( 'FolksyShop' ) ) {
 
  /* Regular hooks and actions. */
 	 // Firstly it's important to create the item post type and category type...
-			add_action( 'init', array( $this, 'createFolksyTypes' ) );
+			add_action( 'init', array( $this, 'create_folksy_types' ) );
 
  /* Our own hooks. */
 	 // The hook for WP cron to update items from Folksy...
-			add_action( 'folksy-shop-update', array( $this, 'updateItems' ), 10, 1 );
+			add_action( 'folksy-shop-update', array( $this, 'update_items' ), 10, 1 );
 			
 		}
 
@@ -103,11 +103,11 @@ if ( !class_exists( 'FolksyShop' ) ) {
 		public function activate() {
 
 	 // Post types and taxonomy...
-			$this->createFolksyTypes();
+			$this->create_folksy_types();
 			flush_rewrite_rules();
 
 	 // WP cron...
-			//wp_schedule_event( time(), 'hourly', 'folksy_shop_update', array( 'tempShopName' ) );
+			//wp_schedule_event( time(), 'hourly', 'folksy-shop-update', array( 'tempShopName' ) );
 
 		}
 
@@ -121,7 +121,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
 		public function deactivate() {
 
 	 // WP cron...
-			wp_clear_scheduled_hook( 'folksy_shop_update' );
+			wp_clear_scheduled_hook( 'folksy-shop-update' );
 
 		}
 
@@ -132,9 +132,9 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * @see FolksyShop::updateItems()
   * @param string $shopname The name of the shop to fetch items from.
   */
-		public function fetchItems( $shopName ) {
+		public function fetch_items( $shopName ) {
 		
-			if ( $shopDetails = $this->_fetchFolksyJson( 'shops/'.$shopName ) ) {
+			if ( $shopDetails = $this->_fetch_json( 'shops/'.$shopName ) ) {
 				$shopItemsArray = array();
 				foreach ( $shopDetails->shop->items AS $shopItem ) {
 					$thisItem = array();
@@ -159,9 +159,9 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * @see FolksyShop::fetchItems
   * @param string $shopname The name of the shop to update items from.
   */
-		public function updateItems( $shopName ) {
+		public function update_items( $shopName ) {
 
-			if ( $shopItems = $this->fetchItems( $shopName ) ) {
+			if ( $shopItems = $this->fetch_items( $shopName ) ) {
 
 				if ( count( $shopItems ) > 0 ) {
 					$shopSections = get_terms( self::TAXONOMY_NAME, array( 'hide_empty' => false ) );
@@ -199,13 +199,13 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * shop section ID (['id']).
   *
   * @since 0.1
-  * @see FolksyShop::updateSections()
+  * @see FolksyShop::update_sections()
   * @param string $shopname The name of the shop to update items from.
   * @return array Details of the shop sections. If there are no sections then returns a blank array.
   */
-		public function fetchSections( $shopName ) {
+		public function fetch_sections( $shopName ) {
 		
-			if ( $shopDetails = $this->_fetchFolksyJson( 'shops/'.$shopName ) ) {
+			if ( $shopDetails = $this->_fetch_json( 'shops/'.$shopName ) ) {
 			
 				$shopSectionsArray = array();
 				foreach ( $shopDetails->shop->sections AS $shopSection ) {
@@ -228,12 +228,12 @@ if ( !class_exists( 'FolksyShop' ) ) {
 	* categories to items.
   *
   * @since 0.1
-  * @see FolksyShop::fetchSections()
+  * @see FolksyShop::fetch_sections()
   * @param string $shopname The name of the shop to update items from.
   */
-		public function updateSections( $shopName ) {
+		public function update_sections( $shopName ) {
 
-			if ( $shopSections = $this->fetchSections( $shopName ) ) {
+			if ( $shopSections = $this->fetch_sections( $shopName ) ) {
 
 				if ( count( $shopSections ) > 0 ) {
 					foreach ( $shopSections AS $shopSection ) {
@@ -257,7 +257,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   *
   * @since 0.1
   */
-		public function createFolksyTypes() {
+		public function create_folksy_types() {
 
 			register_post_type( self::POST_TYPE_NAME, array( 'labels' => array( 'name' => 'Folksy Listings',
 			                                                                    'singular_name' => 'Folksy Listing',
@@ -317,9 +317,9 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * @param string $pagePath Path (from /) of page to fetch from Folksy.
   * @return object|boolean An object representing the Folksy JSON reponse, or false if the request failed.
   */
-		protected function _fetchFolksyJson( $pagePath ) {
+		protected function _fetch_json( $pagePath ) {
 		
-			if ( $rawJson = $this->_fetchFolksyDocument( $pagePath, 'json' ) ) {
+			if ( $rawJson = $this->_fetch_document( $pagePath, 'json' ) ) {
 				if ( $rawJson !== false && !empty( $rawJson )) {
 					$decodedResult = json_decode( $rawJson );
 					if ( $decodedResult !== null ) {
@@ -341,9 +341,9 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * @param string $pagePath Path (from /) of page to fetch from Folksy.
   * @return string|boolean The contents of the page requested, or false if the request failed.
   */
-		protected function _fetchFolksyHtml( $pagePath ) {
+		protected function _fetch_html( $pagePath ) {
 
-			return $this->_fetchFolksyDocument( $pagePath );
+			return $this->_fetch_document( $pagePath );
 
 		}
 		
@@ -356,7 +356,7 @@ if ( !class_exists( 'FolksyShop' ) ) {
   * @param string $pagePath Path (from /) of page to fetch from Folksy.
   * @return string|boolean The contents of the page requested, or false if the request failed.
   */
-		protected function _fetchFolksyDocument( $pagePath, $accept = 'html' ) {
+		protected function _fetch_document( $pagePath, $accept = 'html' ) {
 
 			if ( !empty( $pagePath ) ) {
 				$pagePath = ( substr( $pagePath, 0, 1 ) == '/' ) ? substr( $pagePath, 1 ) : $pagePath;
@@ -387,6 +387,6 @@ if ( !class_exists( 'FolksyShop' ) ) {
 	}
 
 	 // Create the class and get going...
-	$folksy = new FolksyShop();
+	$folksy = new Folksy_Shop();
 
 }
