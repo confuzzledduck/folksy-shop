@@ -98,7 +98,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
  /* Our own hooks. */
 	 // The hook for WP cron to update items from Folksy...
-			add_action( 'folksy-shop-update', array( $this, 'update_items' ), 10, 1 );
+			add_action( 'folksy-update-cron', array( $this, 'update_cron' ), 10, 1 );
 			
 		}
 
@@ -117,7 +117,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			flush_rewrite_rules();
 
 	 // WP cron...
-			//wp_schedule_event( time(), 'hourly', 'folksy-shop-update', array( 'tempShopName' ) );
+			wp_schedule_event( time(), 'hourly', 'folksy-update-cron', array( 'OutOfTheShadows' ) );
 
 		}
 
@@ -131,8 +131,20 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		public function deactivate() {
 
 	 // WP cron...
-			wp_clear_scheduled_hook( 'folksy-shop-update' );
+			wp_clear_scheduled_hook( 'folksy-update-cron' );
 
+		}
+
+ /**
+  * Cron to update the local items from Folksy.
+  *
+  * @since 0.1
+  */
+		public function update_cron( $shopname ) {
+		
+			$this->update_sections( $shopName );
+			$this->update_items( $shopName );
+		
 		}
 
  /**
