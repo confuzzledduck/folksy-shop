@@ -66,6 +66,15 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * The name of the post type we create.
   */
 		const POST_TYPE_NAME = 'folksy_item';
+		
+ /**
+  * Folksy JSON mapping to our own meta fields in the format
+  *   'folksy_key' => 'meta_name'
+  */
+		private $_metaMapping = array( 'price' => '_price',
+		                               'subcategory_id' => '_folksy_category',
+		                               'id' => '_folksy_id',
+		                               'quantity' => '_quantity' );
 
  /* General settings and init functionality. */
 
@@ -177,10 +186,23 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 							                                 'post_status' => 'publish',
 							                                 'post_type' => self::POST_TYPE_NAME ) );
 							if ( $pageId > 0 ) {
-								//
+							
+	 // Insert additional meta data relating to the item...
+								foreach ( $this->_metaMapping AS $folksyKey => $metaKey ) {
+									add_post_meta( $pageId, $metaKey, $shopItem[$folksyKey], true );
+								}
+							
+	 // Match to relevant category based on shop section...
+								foreach ( $shopSections AS $shopSection ) {
+									if ( $shopSection->description == $shopItem['section_id'] ) {
+                    $pageTaxonomies = wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
+										break;
+									}
+								}
+								
 							}
 						}
-					
+						
 					}
 				}
 				
@@ -270,7 +292,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                                    'not_found' => 'No listings founs',
 			                                                                    'not_found_in_trash' => 'No listings found in trash'),
 			                                                 'description' => 'Items listed on Folksy',
-			                                                 'public' => false	, # Post type is not just for internal use
+			                                                 'public' => true	, # Post type is not just for internal use
 			                                                 'show_ui' => true, # This will probably change in due course to make items read-only
 			                                                 'menu_position' => 20, # Put the menu item below Pages and above Comments
 			                                                 'capability_type' => 'page', # For now we want this to behave like a page
