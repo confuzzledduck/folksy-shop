@@ -74,7 +74,8 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		private $_metaMapping = array( 'price' => '_price',
 		                               'subcategory_id' => '_folksy_category',
 		                               'id' => '_folksy_id',
-		                               'quantity' => '_quantity' );
+		                               'quantity' => '_quantity',
+		                               'image' => '_folksy_image' );
 
  /* General settings and init functionality. */
 
@@ -176,10 +177,33 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 					$shopSections = get_terms( self::TAXONOMY_NAME, array( 'hide_empty' => false ) );
 					foreach ( $shopItems AS $shopItem ) {
 
-// Lookup the folksy ID in post meta.
-						if ( false ) {
-// Item exists, update it.
+	 // Find any items matching the Folksy ID...
+						$matchingItems = get_posts( array( 'post_type' => self::POST_TYPE_NAME,
+						                                   'meta_key' => '_folksy_id',
+						                                   'meta_value' => $shopItem['id'] ) );
+						if ( count( $matchingItems ) > 0 ) {
+
+	 // We've seen the item before so let's update it if required...
+							$postData = array( 'ID' => $matchingItems[0]->ID );
+							if ( $matchingItems[0]->post_content != $shopItem['description'] ) {
+								$postData['post_content'] = $shopItem['description'];
+							}
+							if ( $matchingItems[0]->post_title != $shopItem['title'] ) {
+								$postData['post_title'] = $shopItem['title'];
+							}
+							if ( count( $postData ) > 1 ) {
+								wp_update_post( $postData );
+							}
+							
+							$existingMeta = get_post_meta( $matchingItems[0]->ID );
+							foreach ( $this->_metaMapping AS $folksyKey => $metaKey ) {
+								if ( $existingMeta[$metaKey] != $shopItem[$folksyKey] ) {
+									update_post_meta( $matchingItems[0]->ID, $metaKey, $shopItem[$folksyKey] );
+								}
+							}
+						
 						} else {
+
 	 // This is the first time we've seen this item, so let's insert it...
 							$pageId = wp_insert_post( array( 'post_content' => $shopItem['description'],
 							                                 'post_title' => $shopItem['title'],
