@@ -95,6 +95,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
  /* Regular hooks and actions. */
 	 // Firstly it's important to create the item post type and category type...
 			add_action( 'init', array( $this, 'create_folksy_types' ) );
+	 // Settings page to admin menu and to plugins page...
+			add_action( 'admin_menu', array( $this, 'settings_menu' ) );
+			add_filter( 'plugin_action_links', array( $this, 'settings_link' ), 10, 2 );
 
  /* Our own hooks. */
 	 // The hook for WP cron to update items from Folksy...
@@ -134,9 +137,47 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			wp_clear_scheduled_hook( 'folksy-update-cron' );
 
 		}
+		
+ /**
+  * Adds the plugin settings page to general settings menu.
+  *
+  * @since 0.1
+	* @see Folksy_Shop::settings_page()
+  */
+		function settings_menu() {
+
+			add_submenu_page( 'options-general.php', 'Folksy Shop Settings', 'Folksy Shop', 'manage_options', 'folksy_shop', array( $this, 'settings_page' ) );
+
+		}
+		
+ /**
+  * Adds a link to the plugin settings page to the plugins table.
+  *
+  * @since 0.1
+	* @see Folksy_Shop::settings_page()
+  */
+		function settings_link( $links, $file ) {
+
+			if ( $file == plugin_basename( __FILE__ ) ) {
+				array_push( $links, '<a href="options-general.php?page=folksy_shop">Settings</a>' );
+			}
+			return $links;
+
+		}
 
  /**
-  * Cron to update the local items from Folksy.
+  * Plugin settings page. Includes folksy-shop-settings.php.
+  *
+  * @since 0.1
+  */
+		function settings_page() {
+
+			require_once( 'folksy-shop-settings.php' );
+
+		}
+
+ /**
+  * Cron to update the local sections and items from Folksy.
   *
   * @since 0.1
   */
@@ -182,7 +223,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @param string $shopname The name of the shop to update items from.
   */
 		public function update_items( $shopName ) {
-
+		
 			if ( $shopItems = $this->fetch_items( $shopName ) ) {
 
 				if ( count( $shopItems ) > 0 ) {
