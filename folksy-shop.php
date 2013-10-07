@@ -414,12 +414,22 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @since 0.1
   */
 		public function sanitize_settings( $settings ) {
-
-			$existingOptions = get_option( 'folksy_shop_options' );
-			if ( !preg_match( '/^[a-z-09]{3,40}$/i', $settings['folksy_username'] ) ) {
-				add_settings_error( 'folksy_username', 'folksy_username', 'Folksy usernames must be between 3 and 40 characters and contain only letters and numbers.', 'error' );
-				$settings['folksy_username'] = ( !empty( $existingOptions['folksy_username'] ) ) ? $existingOptions['folksy_username'] : '';
+		
+			if ( isset( $settings['unlock'] ) ) {
+				set_transient( 'folksy_username_unlock', true, 60 );
+				return $existingOptions;
 			}
+			
+			$existingOptions = get_option( 'folksy_shop_options' );
+			if ( isset( $settings['folksy_username'] ) ) {
+				if ( !preg_match( '/^[a-z-09]{3,40}$/i', $settings['folksy_username'] ) ) {
+					add_settings_error( 'folksy_username', 'folksy_username', 'Folksy usernames must be between 3 and 40 characters and contain only letters and numbers.', 'error' );
+					$settings['folksy_username'] = ( !empty( $existingOptions['folksy_username'] ) ) ? $existingOptions['folksy_username'] : '';
+				}
+			} else {
+				$settings['folksy_username'] = $existingOptions['folksy_username'];
+			}
+			
 			return $settings;
 
 		}
@@ -459,6 +469,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		public function settings_page() {
 
 			$folksyShopOptions = get_option( 'folksy_shop_options' );
+			if ( true === ( $unlockFlag = get_transient( 'folksy_username_unlock' ) ) ) {
+			  delete_transient( 'folksy_username_unlock' );
+			}
 			if ( empty( $folksyShopOptions['folsky_username'] ) ) {
 				$folksyShopOptions['folsky_username'] = '';
 			}
