@@ -95,7 +95,8 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
  /* Regular hooks and actions. */
 	 // Firstly it's important to create the item post type and category type...
 			add_action( 'init', array( $this, 'create_folksy_types' ) );
-	 // Settings page to admin menu and to plugins page...
+	 // Register settings and add settings page to admin menu and to plugins page...
+			add_action( 'admin_init', array( $this, 'register_settings' ) );
 			add_action( 'admin_menu', array( $this, 'settings_menu' ) );
 			add_filter( 'plugin_action_links', array( $this, 'settings_link' ), 10, 2 );
 
@@ -139,12 +140,35 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		}
 		
  /**
+  * Register the settings variable into WordPress. We use just one setting value
+	* for all our settings to keep things nice and tidy.
+  *
+  * @since 0.1
+  */
+		public function register_settings() {
+
+			register_setting( 'folksy_shop_options', 'folksy_shop_options', array( $this, 'sanitize_settings' ) );
+
+		}
+
+ /**
+  * Validates and sanitises the settings submitted from the settings page.
+  *
+  * @since 0.1
+  */
+		public function sanitize_settings( $settings ) {
+		
+			return array( $settings );
+
+		}
+		
+ /**
   * Adds the plugin settings page to general settings menu.
   *
   * @since 0.1
 	* @see Folksy_Shop::settings_page()
   */
-		function settings_menu() {
+		public function settings_menu() {
 
 			add_submenu_page( 'options-general.php', 'Folksy Shop Settings', 'Folksy Shop', 'manage_options', 'folksy_shop', array( $this, 'settings_page' ) );
 
@@ -156,7 +180,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @since 0.1
 	* @see Folksy_Shop::settings_page()
   */
-		function settings_link( $links, $file ) {
+		public function settings_link( $links, $file ) {
 
 			if ( $file == plugin_basename( __FILE__ ) ) {
 				array_push( $links, '<a href="options-general.php?page=folksy_shop">Settings</a>' );
@@ -170,8 +194,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   *
   * @since 0.1
   */
-		function settings_page() {
+		public function settings_page() {
 
+			$folksyShopOptions = get_option( 'folksy_shop_options' );
 			require_once( 'folksy-shop-settings.php' );
 
 		}
