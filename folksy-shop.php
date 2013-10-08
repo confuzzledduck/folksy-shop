@@ -417,8 +417,23 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		
 			$existingOptions = get_option( 'folksy_shop_options' );
 
+	 // The username has been unlocked, so we'll wipe out all the currently stored
+	 // itemps and shop sections (you were warned!)...
 			if ( isset( $settings['unlock'] ) ) {
 				set_transient( 'folksy_username_unlock', true, 60 );
+				$allItems = get_posts( array( 'posts_per_page' => -1,
+				                              'post_type' => self::POST_TYPE_NAME ) );
+				if ( count( $allItems ) > 0 ) {
+					foreach ( $allItems AS $item ) {
+						wp_delete_post( $item->ID, true );
+					}
+				}
+				$allSections = get_terms( self::TAXONOMY_NAME, array( 'hide_empty' => false ) );
+				if ( count( $allSections ) > 0 ) {
+					foreach ( $allSections AS $section ) {
+						wp_delete_term( $section->term_id, self::TAXONOMY_NAME );
+					}
+				}
 				return $existingOptions;
 			}
 			
