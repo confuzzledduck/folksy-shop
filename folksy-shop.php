@@ -228,7 +228,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		public function update_cron() {
 		
 			if ( ( $shopOptions = get_option( 'folksy_shop_options' ) ) && !empty( $shopOptions['folksy_username'] ) ) {
-				$this->update_sections( $shopOptions['folksy_username'] );
+				$this->update_sections( $shopOptions['folksy_username'], $shopOptions['new_shop'] );
 				$this->update_items( $shopOptions['folksy_username'] );
 			}
 		
@@ -387,7 +387,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				$shopDetails = str_replace(array("\r", "\n", '  '), '', $shopDetails );
 				if ( preg_match_all( '/<li class="collection">(.*?)<\/li>/', $shopDetails, $sections ) ) {
 					foreach ( $sections[1] AS $sectionSegment ) {
-						if ( preg_match_all( '/<a href="\/shops\/[a-z]+\/collections\/(\d+)"><span class="image"><img alt=".*" src=".*" \/><i>\d+<\/i><\/span><span class="text">(\w*)<\/span><\/a>/i', $sectionSegment, $sectionDetails ) ) {
+						if ( preg_match( '/<a href="\/shops\/[a-z]+\/collections\/(\d+)"><span class="image"><img alt=".*" src=".*" \/><i>\d+<\/i><\/span><span class="text">(\w*)<\/span><\/a>/i', $sectionSegment, $sectionDetails ) ) {
 							$shopCollectionsArray[] = array( 'id' => $sectionDetails[1],
 							                                 'title' => $sectionDetails[2] );
 						}
@@ -410,11 +410,13 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   *
   * @since 0.1
   * @see FolksyShop::fetch_sections()
-  * @param string $shopname The name of the shop to update items from.
+  * @param string $shopname Name of the shop to update items from.
+  * @param string $folksyVersion Version of Folksy this fetch should come from. 'main' or 'beta'.
   */
-		public function update_sections( $shopName ) {
+		public function update_sections( $shopName, $folksyVersion = 'main' ) {
 
-			if ( $shopSections = $this->fetch_sections( $shopName ) ) {
+			$sectionFunction = ( 'beta' == $folksyVersion ) ? 'fetch_collections' : 'fetch_sections';
+			if ( $shopSections = $this->$sectionFunction( $shopName ) ) {
 
 				if ( count( $shopSections ) > 0 ) {
 					foreach ( $shopSections AS $shopSection ) {
@@ -479,7 +481,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			}
 			
 			if ( isset( $settings['folksy_username'] ) ) {
-				if ( !preg_match( '/^[a-z-09]{3,40}$/i', $settings['folksy_username'] ) ) {
+				if ( preg_match( '/^[a-z-09]{3,40}$/i', $settings['folksy_username'] ) ) {
+					$settings['new_shop'] = $this->_is_new_shop( $settings['folksy_username'] );
+				} else {
 					add_settings_error( 'folksy_username', 'folksy_username', 'Folksy usernames must be between 3 and 40 characters and contain only letters and numbers.', 'error' );
 					$settings['folksy_username'] = ( !empty( $existingOptions['folksy_username'] ) ) ? $existingOptions['folksy_username'] : '';
 				}
@@ -538,6 +542,16 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		}
 		
  /* Protected and private methods for internal use only. */
+ 
+		protected function _is_new_shop( $shopName ) {
+		
+      if ( $shopDetails = $this->_fetch_html( 'shops/'.$shopName, 'beta' ) ) {
+				return true;
+			} else {
+				return false;
+			}
+		
+		}
 
  /**
   * Fetches a JSON page from Folksy if one is available. If one is not available
