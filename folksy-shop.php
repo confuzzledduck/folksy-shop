@@ -54,7 +54,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * currently on a different subdomain. Should include a trailing slash and
   * protocol (ie http://).
   */
-		const FOLSKY_BASE_URL_BETA = 'http://beta.folksy.com/';
+		const FOLSKY_BASE_URL_BETA = 'https://beta.folksy.com/';
 	
  /**
   * Plugin version number.
@@ -367,6 +367,40 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			}
 		
 		}
+
+ /**
+  * Fetches shop collections from new Folksy shops.
+  *
+  * Shop collections contain the name of the section (['title']) and the Folksy
+  * shop collection ID (['id']).
+  *
+  * @since 0.1
+  * @see FolksyShop::update_sections()
+  * @param string $shopname The name of the shop to fetch collections from.
+  * @return array Details of the shop collections. If there are no collections then returns a blank array.
+  */
+		public function fetch_collections( $shopName ) {
+
+			if ( $shopDetails = $this->_fetch_html( 'shops/'.$shopName, 'beta' ) ) {
+			
+				$shopCollectionsArray = array();
+				$shopDetails = str_replace(array("\r", "\n", '  '), '', $shopDetails );
+				if ( preg_match_all( '/<li class="collection">(.*?)<\/li>/', $shopDetails, $sections ) ) {
+					foreach ( $sections[1] AS $sectionSegment ) {
+						if ( preg_match_all( '/<a href="\/shops\/[a-z]+\/collections\/(\d+)"><span class="image"><img alt=".*" src=".*" \/><i>\d+<\/i><\/span><span class="text">(\w*)<\/span><\/a>/i', $sectionSegment, $sectionDetails ) ) {
+							$shopCollectionsArray[] = array( 'id' => $sectionDetails[1],
+							                                 'title' => $sectionDetails[2] );
+						}
+					}
+				}
+				
+				return $shopCollectionsArray;
+				
+			} else {
+				return false;
+			}
+
+		}
 		
  /**
   * Updates shop taxonomies from shop sections using Folksy as the base source.
@@ -574,7 +608,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 					$curlOptions = array( CURLOPT_HEADER => false,
 					                      CURLOPT_RETURNTRANSFER => true,
-					                      CURLOPT_USERAGENT => 'Folksy Shop for WordPress (v'.self::PLUGIN_VERSION.')' );
+					                      CURLOPT_USERAGENT => 'Folksy Shop for WordPress (v'.self::PLUGIN_VERSION.') https://github.com/confuzzledduck/folksy-shop' );
 					if ( 'json' == $accept ) {
 						$curlOptions[CURLOPT_HTTPHEADER] = array( 'Accept: application/json, text/javascript' );
 					} else {
@@ -583,9 +617,14 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 					curl_setopt_array( $curlHandle, $curlOptions );
 
 					$rawResponse = curl_exec( $curlHandle );
+					$httpCode = curl_getinfo( $curlHandle, CURLINFO_HTTP_CODE );
 					curl_close( $curlHandle );
-
-					return $rawResponse;
+					
+					if ( 200 != $httpCode ) {
+						return false;
+					} else {
+						return $rawResponse;
+					}
 
 				}
 			}
