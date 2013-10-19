@@ -48,6 +48,13 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * trailing slash and protocol (ie http://).
   */
 		const FOLSKY_BASE_URL = 'http://folksy.com/';
+
+ /**
+  * Base URL of the beta Folksy website. Included to support new shop fronts
+  * currently on a different subdomain. Should include a trailing slash and
+  * protocol (ie http://).
+  */
+		const FOLSKY_BASE_URL_BETA = 'http://beta.folksy.com/';
 	
  /**
   * Plugin version number.
@@ -509,11 +516,12 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @since 0.1
   * @see FolksyShop::_fetchFolksyDocument
   * @param string $pagePath Path (from /) of page to fetch from Folksy.
+  * @param string $folksyVersion Version of Folksy this fetch should come from. 'main' or 'beta'.
   * @return object|boolean An object representing the Folksy JSON reponse, or false if the request failed.
   */
-		protected function _fetch_json( $pagePath ) {
+		protected function _fetch_json( $pagePath, $folksyVersion = 'main' ) {
 		
-			if ( $rawJson = $this->_fetch_document( $pagePath, 'json' ) ) {
+			if ( $rawJson = $this->_fetch_document( $pagePath, 'json', $folksyVersion ) ) {
 				if ( $rawJson !== false && !empty( $rawJson )) {
 					$decodedResult = json_decode( $rawJson );
 					if ( $decodedResult !== null ) {
@@ -533,11 +541,12 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @since 0.1
   * @see FolksyShop::_fetchFolksyDocument
   * @param string $pagePath Path (from /) of page to fetch from Folksy.
+  * @param string $folksyVersion Version of Folksy this fetch should come from. 'main' or 'beta'.
   * @return string|boolean The contents of the page requested, or false if the request failed.
   */
-		protected function _fetch_html( $pagePath ) {
+		protected function _fetch_html( $pagePath, $folksyVersion = 'main' ) {
 
-			return $this->_fetch_document( $pagePath );
+			return $this->_fetch_document( $pagePath, 'html', $folksyVersion );
 
 		}
 		
@@ -548,13 +557,20 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   *
   * @since 0.1
   * @param string $pagePath Path (from /) of page to fetch from Folksy.
+  * @param string $accept Switch controlling accept header. Json used for "old" site to request handy API style data.
+  * @param string $folksyVersion Version of Folksy this fetch should come from. 'main' or 'beta'.
   * @return string|boolean The contents of the page requested, or false if the request failed.
   */
-		protected function _fetch_document( $pagePath, $accept = 'html' ) {
+		protected function _fetch_document( $pagePath, $accept = 'html', $folksyVersion = 'main' ) {
 
 			if ( !empty( $pagePath ) ) {
 				$pagePath = ( substr( $pagePath, 0, 1 ) == '/' ) ? substr( $pagePath, 1 ) : $pagePath;
-				if ( $curlHandle = curl_init( self::FOLSKY_BASE_URL.$pagePath ) ) {
+				if ( 'beta' == $folksyVersion ) {
+					$curlHandle = curl_init( self::FOLSKY_BASE_URL_BETA.$pagePath );
+				} else {
+					$curlHandle = curl_init( self::FOLSKY_BASE_URL.$pagePath );
+				}
+				if ( $curlHandle ) {
 
 					$curlOptions = array( CURLOPT_HEADER => false,
 					                      CURLOPT_RETURNTRANSFER => true,
