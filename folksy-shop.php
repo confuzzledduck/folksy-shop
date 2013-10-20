@@ -237,15 +237,18 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
  /* General functionality (the body of the plugin). */
 		
  /**
-  * Fetches shop items from Folksy.
+  * Fetches shop items from Folksy. Uses the Folksy JSON response so pretty
+	* complete information wise, but still not as comprehensive as
+	* FolksyShop::fetch_item_details().
   *
   * @since 0.1
   * @see FolksyShop::updateItems()
   * @param string $shopname The name of the shop to fetch items from.
   */
-		public function fetch_items( $shopName ) {
+		public function fetch_item_list( $shopName ) {
 		
 			if ( $shopDetails = $this->_fetch_json( 'shops/'.$shopName ) ) {
+			
 				$shopItemsArray = array();
 				foreach ( $shopDetails->shop->items AS $shopItem ) {
 					$thisItem = array();
@@ -262,6 +265,72 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			}
 
 		}
+		
+ /**
+  * Fetches a list of shop items from beta Folksy shops. This method differs
+	* FolksyShop::fetch_item_list() in that it doesn't return full item details
+	* (thanks to the lack of JSON feeds for new shops).
+	*
+  * In order to get full details you must call
+  * FolksyShop::fetch_item_details_beta() for each item. This isn't included
+	* here to be a little more friendly to the Folksy servers (ie. so as not to
+	* fetch every shop item page every hour when looking for new items).
+  *
+  * @since 0.1
+  * @see FolksyShop::updateItems()
+  * @param string $shopname The name of the shop to fetch items from.
+  */
+		public function fetch_item_list_beta( $shopName ) {
+		
+			$page = 1;
+			$shopItemsArray = array();
+			while (true) {
+				if ( $shopDetails = $this->_fetch_html( 'shops/'.$shopName.'/items?page='.$page++, 'beta' ) ) {
+
+					$shopDetails = str_replace(array("\r", "\n", '  '), '', $shopDetails );
+					if ( preg_match_all( '/<li class="item">(.*?)<\/li>/', $shopDetails, $items ) ) {
+						$itemCount = count( $items[1] );
+						if ( $itemCount > 0 ) {
+							foreach ( $items[1] AS $itemSegment ) {
+								if ( preg_match( '/<a href="http:\/\/folksy.com\/items\/(\d+)-[a-z0-1-]+"><span class="image"><img alt=".+" item_prop="image" src="(\/\/images.folksy.com\/[a-z0-9-]+)\/shopitem" \/><\/span><div class="text"><h2 itemprop="name">(.+)<\/h2><p><span itemprop="price">&pound;([\d\.]+)<\/span>(\d{1,3}) in stock<\/p><\/div><\/a>/i', $itemSegment, $itemDetails ) ) {
+									$shopItemsArray[] = array( 'id' => $itemDetails[1],
+									                           'image' => $itemDetails[2],
+									                           'title' => html_entity_decode($itemDetails[3]),
+									                           'price' => $itemDetails[4] * 100,
+									                           'quantity' => $itemDetails[5] );
+								}
+							}
+							if ( $itemCount < 60 ) {
+								break;
+							}
+						} else {
+							break;
+						}
+					}
+
+				} else {
+					break;
+				}
+			}
+			
+			return $shopItemsArray;
+		
+		}
+		
+ /**
+  * Fetches details of an item from it's listing page. Required for new shops
+	* due to the lack of JSON feeds for new shops but potentially useful for other
+	* things too.
+  *
+  * @since 0.1
+  * @see FolksyShop::fetch_item_details()
+  * @param string $folksyItemId Folksy's ID of the item to get details about.
+  */
+		public function fetch_item_details( $folksyItemId ) {
+
+			return false;
+
+		}
 
  /**
   * Updates and inserts items using Folksy as the base source.
@@ -272,7 +341,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   */
 		public function update_items( $shopName ) {
 		
-			if ( $shopItems = $this->fetch_items( $shopName ) ) {
+			if ( $shopItems = $this->fetch_item_list( $shopName ) ) {
 
 				if ( count( $shopItems ) > 0 ) {
 					$shopSections = get_terms( self::TAXONOMY_NAME, array( 'hide_empty' => false ) );
@@ -286,8 +355,10 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 	 // We've seen the item before so let's update it if required...
 							$postData = array( 'ID' => $matchingItems[0]->ID );
-							if ( $matchingItems[0]->post_content != $shopItem['description'] ) {
-								$postData['post_content'] = $shopItem['description'];
+							if ( isset( $shopItem['description'] ) ) {
+								if ( $matchingItems[0]->post_content != $shopItem['description'] ) {
+									$postData['post_content'] = $shopItem['description'];
+								}
 							}
 							if ( $matchingItems[0]->post_title != $shopItem['title'] ) {
 								$postData['post_title'] = $shopItem['title'];
