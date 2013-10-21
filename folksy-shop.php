@@ -295,7 +295,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 								if ( preg_match( '/<a href="http:\/\/folksy.com\/items\/(\d+)-[a-z0-1-]+"><span class="image"><img alt=".+" item_prop="image" src="(\/\/images.folksy.com\/[a-z0-9-]+)\/shopitem" \/><\/span><div class="text"><h2 itemprop="name">(.+)<\/h2><p><span itemprop="price">&pound;([\d\.]+)<\/span>(\d{1,3}) in stock<\/p><\/div><\/a>/i', $itemSegment, $itemDetails ) ) {
 									$shopItemsArray[] = array( 'id' => $itemDetails[1],
 									                           'image' => $itemDetails[2],
-									                           'title' => html_entity_decode($itemDetails[3]),
+									                           'title' => html_entity_decode( $itemDetails[3] ),
 									                           'price' => $itemDetails[4] * 100,
 									                           'quantity' => $itemDetails[5] );
 								}
@@ -359,6 +359,13 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 				if ( count( $shopItems ) > 0 ) {
 					$shopSections = get_terms( self::TAXONOMY_NAME, array( 'hide_empty' => false ) );
+	 // If it's a beta shop we need to handle terms (collections) differently...
+					if ( 'beta' == $folksyVersion ) {
+						$collectionItems = array();
+						foreach ( $shopSections AS $shopSection ) {
+							$collectionItems[$shopSection->term_id] = $this->fetch_collection_items( $shopName, $shopSection->description );
+						}
+					}
 					foreach ( $shopItems AS $shopItem ) {
 
 	 // Find any items matching the Folksy ID...
@@ -403,15 +410,24 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 	 // Insert additional meta data relating to the item...
 								foreach ( $this->_metaMapping AS $folksyKey => $metaKey ) {
-									add_post_meta( $pageId, $metaKey, $shopItem[$folksyKey], true );
+									if ( isset( $shopItem[$folksyKey] ) ) {
+										add_post_meta( $pageId, $metaKey, $shopItem[$folksyKey], true );
+									}
 								}
 
-	 // Match to relevant category based on shop section...
+	 // For old shops: match to relevant category based on shop section...
 								if ( isset( $shopItem['section_id'] ) ) {
 									foreach ( $shopSections AS $shopSection ) {
 										if ( $shopSection->description == $shopItem['section_id'] ) {
-											$pageTaxonomies = wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
+											wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
 											break;
+										}
+									}
+	 // For new shops: check if the item belongs in any shop collections...
+								} else if ( ( 'beta' == $folksyVersion ) && isset( $collectionItems ) ) {
+									foreach ( $collectionItems AS $termId => $items) {
+										if ( in_array( $shopItem['id'], $items ) ) {
+											wp_set_object_terms( $pageId, $termId, self::TAXONOMY_NAME, false );
 										}
 									}
 								}
@@ -477,10 +493,11 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				$shopCollectionsArray = array();
 				$shopDetails = str_replace(array("\r", "\n", '  '), '', $shopDetails );
 				if ( preg_match_all( '/<li class="collection">(.*?)<\/li>/', $shopDetails, $sections ) ) {
+
 					foreach ( $sections[1] AS $sectionSegment ) {
-						if ( preg_match( '/<a href="\/shops\/[a-z]+\/collections\/(\d+)"><span class="image"><img alt=".*" src=".*" \/><i>\d+<\/i><\/span><span class="text">(\w*)<\/span><\/a>/i', $sectionSegment, $sectionDetails ) ) {
+						if ( preg_match( '/<a href="\/shops\/[a-z]+\/collections\/(\d+)"><span class="image"><img alt=".*?" src=".*?" \/><i>\d+<\/i><\/span><span class="text">(.*?)<\/span><\/a>/i', $sectionSegment, $sectionDetails ) ) {
 							$shopCollectionsArray[] = array( 'id' => $sectionDetails[1],
-							                                 'title' => $sectionDetails[2] );
+							                                 'title' => html_entity_decode( $sectionDetails[2] ) );
 						}
 					}
 				}
@@ -491,6 +508,49 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				return false;
 			}
 
+		}
+		
+ /**
+  * Fetches a list of all items in a specified shop collection from new Folksy
+  * shops.
+  *
+  * @since 0.1
+  * @see FolksyShop::fetch_collections()
+  * @param string $shopname The name of the shop to which the specified collection belongs.
+  * @param int $collectionId Folksy ID of the collection to fetch.
+  * @return array Folksy IDs of all items in the section. If there are no items in the collection then returns a blank array.
+  */
+		public function fetch_collection_items( $shopName, $collectionId ) {
+			
+			$page = 1;
+			$collectionItemsArray = array();
+			while (true) {
+				if ( $collectionDetails = $this->_fetch_html( 'shops/'.$shopName.'/collections/'.$collectionId.'/items?page='.$page++, 'beta' ) ) {
+
+					$collectionDetails = str_replace(array("\r", "\n", '  '), '', $collectionDetails );
+					if ( preg_match_all( '/<li class="item">(.*?)<\/li>/', $collectionDetails, $items ) ) {
+						$itemCount = count( $items[1] );
+						if ( $itemCount > 0 ) {
+							foreach ( $items[1] AS $itemSegment ) {
+								if ( preg_match( '/<a href="http:\/\/folksy.com\/items\/(\d+)-[a-z0-1-]+">/i', $itemSegment, $itemDetails ) ) {
+									$collectionItemsArray[] = $itemDetails[1];
+								}
+							}
+							if ( $itemCount < 60 ) {
+								break;
+							}
+						} else {
+							break;
+						}
+					}
+
+				} else {
+					break;
+				}
+			}
+			
+			return $collectionItemsArray;
+		
 		}
 
  /**
