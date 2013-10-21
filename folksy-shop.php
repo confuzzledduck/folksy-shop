@@ -55,7 +55,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * protocol (ie http://).
   */
 		const FOLSKY_BASE_URL_BETA = 'https://beta.folksy.com/';
-	
+
  /**
   * Plugin version number.
   */
@@ -65,7 +65,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * Settings format version number this build of the plugin requires.
   */
 		const OPTIONS_VERSION = '1';
-		
+
  /**
   * The name of the taxonomy we create.
   */
@@ -77,7 +77,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		const POST_TYPE_NAME = 'folksy_item';
 
  /* Variables. */
-		
+
  /**
   * Folksy JSON mapping to our own meta fields in the format
   *   'folksy_key' => 'meta_name'
@@ -235,20 +235,20 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		}
 
  /* General functionality (the body of the plugin). */
-		
+
  /**
   * Fetches shop items from Folksy. Uses the Folksy JSON response so pretty
-	* complete information wise, but still not as comprehensive as
-	* FolksyShop::fetch_item_details().
+  * complete information wise, but still not as comprehensive as
+  * FolksyShop::fetch_item_details().
   *
   * @since 0.1
   * @see FolksyShop::updateItems()
   * @param string $shopname The name of the shop to fetch items from.
   */
 		public function fetch_item_list( $shopName ) {
-		
+
 			if ( $shopDetails = $this->_fetch_json( 'shops/'.$shopName ) ) {
-			
+
 				$shopItemsArray = array();
 				foreach ( $shopDetails->shop->items AS $shopItem ) {
 					$thisItem = array();
@@ -257,7 +257,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 					}
 					$shopItemsArray[] = $thisItem;
 				}
-				
+
 				return $shopItemsArray;
 
 			} else {
@@ -265,23 +265,23 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			}
 
 		}
-		
+
  /**
   * Fetches a list of shop items from beta Folksy shops. This method differs
-	* FolksyShop::fetch_item_list() in that it doesn't return full item details
-	* (thanks to the lack of JSON feeds for new shops).
-	*
+  * FolksyShop::fetch_item_list() in that it doesn't return full item details
+  * (thanks to the lack of JSON feeds for new shops).
+  *
   * In order to get full details you must call
   * FolksyShop::fetch_item_details_beta() for each item. This isn't included
-	* here to be a little more friendly to the Folksy servers (ie. so as not to
-	* fetch every shop item page every hour when looking for new items).
+  * here to be a little more friendly to the Folksy servers (ie. so as not to
+  * fetch every shop item page every hour when looking for new items).
   *
   * @since 0.1
   * @see FolksyShop::updateItems()
   * @param string $shopname The name of the shop to fetch items from.
   */
 		public function fetch_item_list_beta( $shopName ) {
-		
+
 			$page = 1;
 			$shopItemsArray = array();
 			while (true) {
@@ -312,15 +312,15 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 					break;
 				}
 			}
-			
+
 			return $shopItemsArray;
 		
 		}
-		
+
  /**
   * Fetches details of an item from it's listing page. Required for new shops
-	* due to the lack of JSON feeds for new shops but potentially useful for other
-	* things too.
+  * due to the lack of JSON feeds for new shops but potentially useful for other
+  * things too.
   *
   * @since 0.1
   * @see FolksyShop::fetch_item_details()
@@ -353,7 +353,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @param string $shopname The name of the shop to update items from.
   */
 		public function update_items( $shopName, $folksyVersion = 'main' ) {
-		
+
 			$itemsFunction = ( 'beta' == $folksyVersion ) ? 'fetch_item_list_beta' : 'fetch_item_list';
 			if ( $shopItems = $this->$itemsFunction( $shopName ) ) {
 
@@ -380,14 +380,14 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 							if ( count( $postData ) > 1 ) {
 								wp_update_post( $postData );
 							}
-							
+
 							$existingMeta = get_post_meta( $matchingItems[0]->ID );
 							foreach ( $this->_metaMapping AS $folksyKey => $metaKey ) {
 								if ( $existingMeta[$metaKey] != $shopItem[$folksyKey] ) {
 									update_post_meta( $matchingItems[0]->ID, $metaKey, $shopItem[$folksyKey] );
 								}
 							}
-						
+
 						} else {
 
 	 // This is the first time we've seen this item, so let's insert it...
@@ -400,17 +400,17 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 							                                 'post_status' => 'publish',
 							                                 'post_type' => self::POST_TYPE_NAME ) );
 							if ( $pageId > 0 ) {
-							
+
 	 // Insert additional meta data relating to the item...
 								foreach ( $this->_metaMapping AS $folksyKey => $metaKey ) {
 									add_post_meta( $pageId, $metaKey, $shopItem[$folksyKey], true );
 								}
-							
+
 	 // Match to relevant category based on shop section...
 								if ( isset( $shopItem['section_id'] ) ) {
 									foreach ( $shopSections AS $shopSection ) {
 										if ( $shopSection->description == $shopItem['section_id'] ) {
-	                    $pageTaxonomies = wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
+											$pageTaxonomies = wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
 											break;
 										}
 									}
@@ -427,9 +427,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			} else {
 				return false;
 			}
-		
+
 		}
-		
+
  /**
   * Fetches shop sections from Folksy.
   *
@@ -442,17 +442,17 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @return array Details of the shop sections. If there are no sections then returns a blank array.
   */
 		public function fetch_sections( $shopName ) {
-		
+
 			if ( $shopDetails = $this->_fetch_json( 'shops/'.$shopName ) ) {
-			
+
 				$shopSectionsArray = array();
 				foreach ( $shopDetails->shop->sections AS $shopSection ) {
 					$shopSectionsArray[] = array( 'id' => $shopSection->id,
 					                              'title' => $shopSection->title );
 				}
-				
+
 				return $shopSectionsArray;
-			
+
 			} else {
 				return false;
 			}
@@ -473,7 +473,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		public function fetch_collections( $shopName ) {
 
 			if ( $shopDetails = $this->_fetch_html( 'shops/'.$shopName, 'beta' ) ) {
-			
+
 				$shopCollectionsArray = array();
 				$shopDetails = str_replace(array("\r", "\n", '  '), '', $shopDetails );
 				if ( preg_match_all( '/<li class="collection">(.*?)<\/li>/', $shopDetails, $sections ) ) {
@@ -484,20 +484,20 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						}
 					}
 				}
-				
+
 				return $shopCollectionsArray;
-				
+
 			} else {
 				return false;
 			}
 
 		}
-		
+
  /**
   * Updates shop taxonomies from shop sections using Folksy as the base source.
-	* The title of the shop section is used as the term itself, and we use the
+  * The title of the shop section is used as the term itself, and we use the
   * description field to hold the Folksy shop ID because we need this to match
-	* categories to items.
+  * categories to items.
   *
   * @since 0.1
   * @see FolksyShop::fetch_sections()
@@ -517,20 +517,20 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						}
 					}
 				}
-				
+
 				return true;
 
 			} else {
 				return false;
 			}
-		
+
 		}
-		
+
  /* Settings related functionality. */
 
  /**
   * Register the settings variable into WordPress. We use just one setting value
-	* for all our settings to keep things nice and tidy.
+  * for all our settings to keep things nice and tidy.
   *
   * @since 0.1
   */
@@ -542,13 +542,13 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
  /**
   * Validates and sanitises the settings submitted from the settings page.
-	*
-	*  - Usernames must be between 3 and 40 letters or numbers only.
+  *
+  *  - Usernames must be between 3 and 40 letters or numbers only.
   *
   * @since 0.1
   */
 		public function sanitize_settings( $settings ) {
-		
+
 			$existingOptions = get_option( 'folksy_shop_options' );
 
 	 // The username has been unlocked, so we'll wipe out all the currently stored
@@ -570,7 +570,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				}
 				return $existingOptions;
 			}
-			
+
 			if ( isset( $settings['folksy_username'] ) ) {
 				if ( preg_match( '/^[a-z-09]{3,40}$/i', $settings['folksy_username'] ) ) {
 					$settings['new_shop'] = $this->_is_new_shop( $settings['folksy_username'] );
@@ -581,7 +581,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			} else {
 				$settings['folksy_username'] = $existingOptions['folksy_username'];
 			}
-			
+
 			return $settings;
 
 		}
@@ -590,7 +590,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * Adds the plugin settings page to general settings menu.
   *
   * @since 0.1
-	* @see Folksy_Shop::settings_page()
+  * @see Folksy_Shop::settings_page()
   */
 		public function settings_menu() {
 
@@ -602,7 +602,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * Adds a link to the plugin settings page to the plugins table.
   *
   * @since 0.1
-	* @see Folksy_Shop::settings_page()
+  * @see Folksy_Shop::settings_page()
   */
 		public function settings_link( $links, $file ) {
 
@@ -633,9 +633,17 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		}
 		
  /* Protected and private methods for internal use only. */
- 
+
+ /**
+  * Checks if the provided shop is an old or new (beta shops launched October
+  * 2013) store front.
+  *
+  * @since 0.1
+  * @param string $shopName Name of the shop to check.
+  * @return boolean True if the given shop is a new shop, false if it is not.
+  */
 		protected function _is_new_shop( $shopName ) {
-		
+
       if ( $shopDetails = $this->_fetch_html( 'shops/'.$shopName, 'beta' ) ) {
 				return true;
 			} else {
@@ -659,7 +667,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @return object|boolean An object representing the Folksy JSON reponse, or false if the request failed.
   */
 		protected function _fetch_json( $pagePath, $folksyVersion = 'main' ) {
-		
+
 			if ( $rawJson = $this->_fetch_document( $pagePath, 'json', $folksyVersion ) ) {
 				if ( $rawJson !== false && !empty( $rawJson )) {
 					$decodedResult = json_decode( $rawJson );
@@ -672,7 +680,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			return false;
 		
 		}
-		
+
  /**
   * Fetches an HTML page from Folksy if one is available. If it is not available
   * (ie. the page is a 404 error) then false is returned.
@@ -688,7 +696,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			return $this->_fetch_document( $pagePath, 'html', $folksyVersion );
 
 		}
-		
+
  /**
   * Fetches a document from Folksy if one is available. If it is not available
   * (ie. the page is a 404 error or it was an invalid request in the first
@@ -724,7 +732,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 					$rawResponse = curl_exec( $curlHandle );
 					$httpCode = curl_getinfo( $curlHandle, CURLINFO_HTTP_CODE );
 					curl_close( $curlHandle );
-					
+
 					if ( 200 != $httpCode ) {
 						return false;
 					} else {
