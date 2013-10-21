@@ -228,8 +228,8 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		public function update_cron() {
 		
 			if ( ( $shopOptions = get_option( 'folksy_shop_options' ) ) && !empty( $shopOptions['folksy_username'] ) ) {
-				$this->update_sections( $shopOptions['folksy_username'], $shopOptions['new_shop'] );
-				$this->update_items( $shopOptions['folksy_username'] );
+				$this->update_sections( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
+				$this->update_items( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
 			}
 		
 		}
@@ -328,7 +328,20 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   */
 		public function fetch_item_details( $folksyItemId ) {
 
-			return false;
+			if ( $itemDetails = $this->_fetch_json( 'items/'.$folksyItemId ) ) {
+
+				$itemDetailsArray = array();
+				foreach ($itemDetails AS $key => $value) {
+					if ( is_string( $value ) ) {
+						$itemDetailsArray[$key] = trim($value);
+					}
+				}
+
+				return $itemDetailsArray;
+
+			} else {
+				return false;
+			}
 
 		}
 
@@ -339,9 +352,10 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @see FolksyShop::fetchItems
   * @param string $shopname The name of the shop to update items from.
   */
-		public function update_items( $shopName ) {
+		public function update_items( $shopName, $folksyVersion = 'main' ) {
 		
-			if ( $shopItems = $this->fetch_item_list( $shopName ) ) {
+			$itemsFunction = ( 'beta' == $folksyVersion ) ? 'fetch_item_list_beta' : 'fetch_item_list';
+			if ( $shopItems = $this->$itemsFunction( $shopName ) ) {
 
 				if ( count( $shopItems ) > 0 ) {
 					$shopSections = get_terms( self::TAXONOMY_NAME, array( 'hide_empty' => false ) );
@@ -377,6 +391,10 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						} else {
 
 	 // This is the first time we've seen this item, so let's insert it...
+							if ( !isset( $shopItem['description'] ) ) {
+								$additionalDetails = $this->fetch_item_details( $shopItem['id'] );
+								$shopItem['description'] = $additionalDetails['description'];
+							}
 							$pageId = wp_insert_post( array( 'post_content' => $shopItem['description'],
 							                                 'post_title' => $shopItem['title'],
 							                                 'post_status' => 'publish',
@@ -389,10 +407,12 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 								}
 							
 	 // Match to relevant category based on shop section...
-								foreach ( $shopSections AS $shopSection ) {
-									if ( $shopSection->description == $shopItem['section_id'] ) {
-                    $pageTaxonomies = wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
-										break;
+								if ( isset( $shopItem['section_id'] ) ) {
+									foreach ( $shopSections AS $shopSection ) {
+										if ( $shopSection->description == $shopItem['section_id'] ) {
+	                    $pageTaxonomies = wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
+											break;
+										}
 									}
 								}
 								
