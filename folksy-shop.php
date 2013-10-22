@@ -215,6 +215,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                              'rewrite' => array( 'slug' => 'folksy-section',
 			                                                                                  'with_front' => false,
 			                                                                                  'hierarchical' => false ) ) );
+var_dump($this->fetch_item_images(4568091));exit;
 
 		}
 
@@ -338,6 +339,31 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				}
 
 				return $itemDetailsArray;
+
+			} else {
+				return false;
+			}
+
+		}
+		
+ /**
+  * Fetches the URL of images of an item from it's listing page.
+  *
+  * @since 0.1
+  * @param string $folksyItemId Folksy's ID of the item to get images of.
+  */
+		public function fetch_item_images( $folksyItemId ) {
+
+			if ( $itemDetails = $this->_fetch_html( 'items/'.$folksyItemId ) ) {
+
+				$itemDetails = str_replace(array("\r", "\n", '  '), '', $itemDetails );
+				if ( preg_match_all( '/<img alt="" data-role="preview-image" src="\/\/(images.folksy.com\/[a-z0-9-]*)\/mini" \/>/i', $itemDetails, $images ) ) {
+					if ( isset( $images[1] ) ) {
+						return $images[1];
+					}
+				} else {
+				  return array();
+				}
 
 			} else {
 				return false;
