@@ -85,8 +85,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		private $_metaMapping = array( 'price' => '_price',
 		                               'subcategory_id' => '_folksy_category',
 		                               'id' => '_folksy_id',
-		                               'quantity' => '_quantity',
-		                               'image' => '_folksy_image' );
+		                               'quantity' => '_quantity' );
 
  /* Magic methods. */
 
