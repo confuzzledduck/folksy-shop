@@ -215,7 +215,6 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                              'rewrite' => array( 'slug' => 'folksy-section',
 			                                                                                  'with_front' => false,
 			                                                                                  'hierarchical' => false ) ) );
-var_dump($this->fetch_item_images(4568091));exit;
 
 		}
 
@@ -414,6 +413,7 @@ var_dump($this->fetch_item_images(4568091));exit;
 								wp_update_post( $postData );
 							}
 
+	 // Update the meta data...
 							$existingMeta = get_post_meta( $matchingItems[0]->ID );
 							foreach ( $this->_metaMapping AS $folksyKey => $metaKey ) {
 								if ( $existingMeta[$metaKey] != $shopItem[$folksyKey] ) {
@@ -458,7 +458,29 @@ var_dump($this->fetch_item_images(4568091));exit;
 									}
 								}
 								
+	 // Insert images of this item as attachments...
+								if ( is_array( $itemImages = $this->fetch_item_images( $shopItem['id'] ) ) ) {
+									$thumbnailSet = false;
+									$wpUploadDir = wp_upload_dir();
+									require_once( ABSPATH . 'wp-admin/includes/image.php' );
+									foreach ( $itemImages AS $folksyImageUrl ) {
+										$fileUploadPath = $wpUploadDir['path'].'/'.substr( $folksyImageUrl, ( strpos( $folksyImageUrl, '/' ) + 1 ) ).'.jpg';
+										if ( copy( 'http://'.$folksyImageUrl, $fileUploadPath ) ) {
+											$fileTypeData = wp_check_filetype( basename( $fileUploadPath ) );
+											$attachmentId = wp_insert_attachment( array( 'post_title' => $shopItem['title'].' Product Image',
+											                                             'post_mime_type' => $fileTypeData['type'] ), $fileUploadPath, $pageId );
+											if ( $attachmentId != 0 ) {
+												wp_update_attachment_metadata( $attachmentId, wp_generate_attachment_metadata( $attachmentId, $fileUploadPath ) );
+												if ( false == $thumbnailSet ) {
+													$thumbnailSet = set_post_thumbnail( $pageId, $attachmentId );
+												}
+											}
+										}
+									}
+								}
+								
 							}
+							
 						}
 						
 					}
