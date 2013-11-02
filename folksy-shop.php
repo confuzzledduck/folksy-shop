@@ -229,7 +229,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		
 			if ( ( $shopOptions = get_option( 'folksy_shop_options' ) ) && !empty( $shopOptions['folksy_username'] ) ) {
 				$this->update_sections( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
-				$this->update_items( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
+				$this->update_items( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main', $shopOptions );
 			}
 		
 		}
@@ -371,13 +371,18 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		}
 
  /**
-  * Updates and inserts items using Folksy as the base source.
+  * Updates and inserts items and their images using Folksy as the base source.
   *
   * @since 0.1
-  * @see FolksyShop::fetchItems
+  * @see FolksyShop::fetch_item_list
+  * @see FolksyShop::fetch_item_list_beta
+  * @see FolksyShop::fetch_item_images
   * @param string $shopname The name of the shop to update items from.
+  * @param string $folksyVersion If this shop is an old ('main') shopfront or a new (October 2013) ('beta') shopfront.
+  * @param array $additionalSettings Additional configuration options (the output of get_option( 'folksy_shop_options' ) will do nicely) for this update. Optional.
+  * @return boolean True on success, false if no items were found in the given Folksy shop.
   */
-		public function update_items( $shopName, $folksyVersion = 'main' ) {
+		public function update_items( $shopName, $folksyVersion = 'main', array $additionalSettings = null ) {
 
 			$itemsFunction = ( 'beta' == $folksyVersion ) ? 'fetch_item_list_beta' : 'fetch_item_list';
 			if ( $shopItems = $this->$itemsFunction( $shopName ) ) {
@@ -459,20 +464,22 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 								}
 								
 	 // Insert images of this item as attachments...
-								if ( is_array( $itemImages = $this->fetch_item_images( $shopItem['id'] ) ) ) {
-									$thumbnailSet = false;
-									$wpUploadDir = wp_upload_dir();
-									require_once( ABSPATH . 'wp-admin/includes/image.php' );
-									foreach ( $itemImages AS $folksyImageUrl ) {
-										$fileUploadPath = $wpUploadDir['path'].'/'.substr( $folksyImageUrl, ( strpos( $folksyImageUrl, '/' ) + 1 ) ).'.jpg';
-										if ( copy( 'http://'.$folksyImageUrl, $fileUploadPath ) ) {
-											$fileTypeData = wp_check_filetype( basename( $fileUploadPath ) );
-											$attachmentId = wp_insert_attachment( array( 'post_title' => $shopItem['title'].' Product Image',
-											                                             'post_mime_type' => $fileTypeData['type'] ), $fileUploadPath, $pageId );
-											if ( $attachmentId != 0 ) {
-												wp_update_attachment_metadata( $attachmentId, wp_generate_attachment_metadata( $attachmentId, $fileUploadPath ) );
-												if ( false == $thumbnailSet ) {
-													$thumbnailSet = set_post_thumbnail( $pageId, $attachmentId );
+								if ( isset( $additionalSettings['folksy_images_download'] ) && ( true == $additionalSettings['folksy_images_download'] ) ) {
+									if ( is_array( $itemImages = $this->fetch_item_images( $shopItem['id'] ) ) ) {
+										$thumbnailSet = false;
+										$wpUploadDir = wp_upload_dir();
+										require_once( ABSPATH . 'wp-admin/includes/image.php' );
+										foreach ( $itemImages AS $folksyImageUrl ) {
+											$fileUploadPath = $wpUploadDir['path'].'/'.substr( $folksyImageUrl, ( strpos( $folksyImageUrl, '/' ) + 1 ) ).'.jpg';
+											if ( copy( 'http://'.$folksyImageUrl, $fileUploadPath ) ) {
+												$fileTypeData = wp_check_filetype( basename( $fileUploadPath ) );
+												$attachmentId = wp_insert_attachment( array( 'post_title' => $shopItem['title'].' Product Image',
+												                                             'post_mime_type' => $fileTypeData['type'] ), $fileUploadPath, $pageId );
+												if ( $attachmentId != 0 ) {
+													wp_update_attachment_metadata( $attachmentId, wp_generate_attachment_metadata( $attachmentId, $fileUploadPath ) );
+													if ( false == $thumbnailSet ) {
+														$thumbnailSet = set_post_thumbnail( $pageId, $attachmentId );
+													}
 												}
 											}
 										}
@@ -652,6 +659,8 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * Validates and sanitises the settings submitted from the settings page.
   *
   *  - Usernames must be between 3 and 40 letters or numbers only.
+  *  - Download image option must be either 'yes' or 'no'. Anything else will
+	*    default to 'no'.
   *
   * @since 0.1
   */
@@ -660,7 +669,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			$existingOptions = get_option( 'folksy_shop_options' );
 
 	 // The username has been unlocked, so we'll wipe out all the currently stored
-	 // itemps and shop sections (you were warned!)...
+	 // items and shop sections (you were warned!)...
 			if ( isset( $settings['unlock'] ) ) {
 				set_transient( 'folksy_username_unlock', true, 60 );
 				$allItems = get_posts( array( 'posts_per_page' => -1,
@@ -679,6 +688,8 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				return $existingOptions;
 			}
 
+	 // Clean up changed settings if the username wasn't unlocked...
+	 // Username handling...
 			if ( isset( $settings['folksy_username'] ) ) {
 				if ( preg_match( '/^[a-z-09]{3,40}$/i', $settings['folksy_username'] ) ) {
 					$settings['new_shop'] = $this->_is_new_shop( $settings['folksy_username'] );
@@ -688,6 +699,18 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				}
 			} else {
 				$settings['folksy_username'] = $existingOptions['folksy_username'];
+			}
+			
+	 // Image download options...
+			if ( isset( $settings['folksy_images_download'] ) ) {
+				switch ( $settings['folksy_images_download'] ) {
+					case 'yes':
+						$settings['folksy_images_download'] = true;
+					break;
+					case 'no': default:
+						$settings['folksy_images_download'] = false;
+					break;
+				}
 			}
 
 			return $settings;
