@@ -8,7 +8,7 @@
 			<td>
 				<input type="text" name="folksy_shop_options[folksy_username]" value="<?php echo $folksyShopOptions['folksy_username']; ?>" disabled="" style="color: #A0A0A0" />
 				<input class="button" type="submit" value="Unlock" name="folksy_shop_options[unlock]" />
-				<p style="margin-bottom: 0px;">Caution: unlocking the Folksy username will remove all currently synced items and shop categories.</p>
+				<p style="margin-bottom: 0px;">Caution: unlocking the Folksy username will remove all currently synced items and shop categories. All other settings will be retained.</p>
 			</td>
 		</tr>
 <?php } else { ?>

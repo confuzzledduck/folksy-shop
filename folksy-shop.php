@@ -246,7 +246,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @param string $shopname The name of the shop to fetch items from.
   */
 		public function fetch_item_list( $shopName ) {
-
+		
 			if ( $shopDetails = $this->_fetch_json( 'shops/'.$shopName ) ) {
 
 				$shopItemsArray = array();
@@ -685,6 +685,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						wp_delete_term( $section->term_id, self::TAXONOMY_NAME );
 					}
 				}
+				add_settings_error( 'folksy_username', 'folksy_username', 'Username unlocked. <br />Folksy items and shop categories have been removed.', 'updated' );
 				return $existingOptions;
 			}
 
