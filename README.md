@@ -8,11 +8,12 @@ This plugin currently works in just one direction, Folksy -> WordPress, but with
 Todo
 ----
 - ~~Add options pages to specify shop name, etc.~~
-- Build WordPress shortcodes or provide template tags to help with outputting items in themes.
+- Build WordPress shortcodes or provide template tags to help with outputting items in themes? (Perhaps not required as items are just custom post types with some additional details.)
 - Mark items as no longer available if they do not show up in the Folksy feed.
-- Download and attach images to items rather than facilitating hotlinking to Folksy's image CDN.
+- ~~Download and attach images to items rather than facilitating hotlinking to Folksy's image CDN.~~
+- Check images when updating an item to add new images and remove images which have been removed from Folksy.
 - Check items are still included in shop sections when updating them.
 
 Limitations
 -----------
-- Ths plugin currently uses Folksy's hidden JSON API to fetch data about shops and items. This appears to be discontinued in the new (currently 'beta') shops. Some functionality to fetch from HTML pages, but this needs expanding.
+- ~~Ths plugin currently uses Folksy's hidden JSON API to fetch data about shops and items. This appears to be discontinued in the new (currently 'beta') shops. Some functionality to fetch from HTML pages, but this needs expanding.~~
