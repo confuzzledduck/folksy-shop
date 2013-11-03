@@ -80,7 +80,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
  /**
   * Folksy JSON mapping to our own meta fields in the format
-  *   'folksy_key' => 'meta_name'
+  * 'folksy_key' => 'meta_name'
   */
 		private $_metaMapping = array( 'price' => '_price',
 		                               'subcategory_id' => '_folksy_category',
@@ -881,5 +881,70 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 	 // Create the class and get going...
 	$folksy = new Folksy_Shop();
+
+}
+
+/* Template tags. */
+
+ /**
+  * Retrieve price for an item.
+  *
+  * @since 0.1
+  * @param int|object $post Optional. Post ID or object.
+  * @return string The price of the item formatted as %.2f (00.00).
+  */
+function get_folksy_price( $post = 0 ) {
+
+	$post = get_post( $post );
+	return sprintf( '%.2f', get_post_meta( $post->ID, '_price', true ) / 100 );
+
+}
+
+ /**
+  * Display the price for an item preceeded by a pound sign (£). Must be called
+  * from inside "The Loop".
+  *
+  * @since 0.1
+  * @param string $before Optional HTML to display before the link.
+  * @param string $after Optional HTML to display after the link.
+  */
+function folksy_price( $before = '', $after = '' ) {
+
+	echo $before.'&pound;'.get_folksy_price().$after;
+
+}
+
+ /**
+  * Retrieve Folksy link for an item.
+  *
+  * @since 0.1
+  * @param int|object $post Optional. Post ID or object.
+  * @return string The URL of the item on Folksy.
+  */
+function get_folksy_link( $post = 0 ) {
+
+	$post = get_post( $post );
+	$slug = str_replace( '?folksy_item=', '', basename( get_permalink( $post->ID ) ) );
+	return Folksy_Shop::FOLSKY_BASE_URL.'items/'.get_post_meta( $post->ID, '_folksy_id', true ).'-'.$slug;
+
+}
+
+ /**
+  * Display the Folksy link for an item. Must be called from inside "The Loop".
+  *
+  * @since 0.1
+  * @param string $text Optional The link text or HTML to be displayed. Defaults to 'View on Folksy'.
+  * @param string $title Optional The tooltip for the link. Must be sanitized. Defaults to the sanitized post title.
+  * @param string $before Optional HTML to display before the link.
+  * @param string $after Optional HTML to display after the link.
+  */
+function folksy_link( $text = 'View on Folksy', $title = '', $before = '', $after = '' ) {
+
+	if ( empty( $title ) ) {
+		$title = the_title_attribute( array( 'echo' => false ) );
+	}
+
+	$link = '<a href="'.get_folksy_link().'" title="'.$title.'">'.$text.'</a>';
+	echo $before.$link.$after;
 
 }
