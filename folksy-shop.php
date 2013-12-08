@@ -700,6 +700,18 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			} else {
 				$settings['folksy_username'] = $existingOptions['folksy_username'];
 			}
+
+	 // Unavailable items options...
+			if ( isset( $settings['folksy_unavailable_action'] ) ) {
+				switch ( $settings['folksy_unavailable_action'] ) {
+					case 'quantity': case 'hide': case 'delete':
+						$settings['folksy_unavailable_action'] = $settings['folksy_unavailable_action'];
+					break;
+					case 'nothing': default:
+						unset($settings['folksy_unavailable_action']);
+					break;
+				}
+			}
 			
 	 // Image download options...
 			if ( isset( $settings['folksy_images_download'] ) ) {

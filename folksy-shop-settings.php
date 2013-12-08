@@ -20,6 +20,17 @@
 		</tr>
 <?php } ?>
 		<tr>
+			<th><label for="folksy_shop_options[folksy_unavailable_action]">When an item is unavailable on Folksy</label></th>
+			<td>
+				<select name="folksy_shop_options[folksy_unavailable_action]">
+					<option value="quanitity" <?php echo ( isset( $folksyShopOptions['folksy_unavailable_action'] ) && ( 'quantity' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Set quantity to zero</option>
+					<option value="hide" <?php echo ( isset( $folksyShopOptions['folksy_unavailable_action'] ) && ( 'hide' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Hide from site (unpublish)</option>
+					<option value="delete" <?php echo ( isset( $folksyShopOptions['folksy_unavailable_action'] ) && ( 'delete' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Delete from site (trash)</option>
+					<option value="nothing" <?php echo ( !isset( $folksyShopOptions['folksy_unavailable_action'] ) || ( 'nothing' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Do nothing</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
 			<th><label for="folksy_shop_options[folksy_images_download]">Download images as attachments</label></th>
 			<td>
 				<select name="folksy_shop_options[folksy_images_download]">
