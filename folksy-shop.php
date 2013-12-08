@@ -387,6 +387,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			if ( $shopItems = $this->$itemsFunction( $shopName ) ) {
 
 				if ( count( $shopItems ) > 0 ) {
+					$seenItemsList = array();
 					$shopSections = get_terms( self::TAXONOMY_NAME, array( 'hide_empty' => false ) );
 	 // If it's a beta shop we need to handle terms (collections) differently...
 					if ( 'beta' == $folksyVersion ) {
@@ -424,6 +425,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 									update_post_meta( $matchingItems[0]->ID, $metaKey, $shopItem[$folksyKey] );
 								}
 							}
+							
+	 // Record that we've seen this item...
+							$seenItemsList[] = $matchingItems[0]->ID;
 
 						} else {
 
@@ -487,9 +491,37 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 								
 							}
 							
+	 // Record that we've seen this item...
+							$seenItemsList[] = $pageId;
+							
 						}
 						
 					}
+
+	 // If we have to do something when items are no longer available...
+					if ( isset( $additionalSettings['folksy_unavailable_action'] ) ) {
+						$unavailableItems = get_posts( array( 'post_type' => self::POST_TYPE_NAME,
+						                                      'post_status' => 'publish',
+						                                      'posts_per_page' => -1,
+						                                      'exclude' => $seenItemsList ) );
+						if ( count( $unavailableItems ) > 0 ) {
+							foreach ( $unavailableItems AS $unavailableItem ) {
+								switch ( $additionalSettings['folksy_unavailable_action'] ) {
+									case 'quantity':
+										update_post_meta( $unavailableItem->ID, $this->_metaMapping['quantity'], 0 );
+									break;
+									case 'hide':
+										wp_update_post( array( 'ID' => $unavailableItem->ID,
+										                       'post_status' => 'draft' ) );
+									break;
+									case 'delete':
+										wp_delete_post( $unavailableItem->ID );
+									break;
+								}
+							}
+						}
+					}
+					
 				}
 				
 				return true;

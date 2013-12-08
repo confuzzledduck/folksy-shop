@@ -24,7 +24,7 @@
 			<td>
 				<select name="folksy_shop_options[folksy_unavailable_action]">
 					<option value="quanitity" <?php echo ( isset( $folksyShopOptions['folksy_unavailable_action'] ) && ( 'quantity' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Set quantity to zero</option>
-					<option value="hide" <?php echo ( isset( $folksyShopOptions['folksy_unavailable_action'] ) && ( 'hide' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Hide from site (unpublish)</option>
+					<option value="hide" <?php echo ( isset( $folksyShopOptions['folksy_unavailable_action'] ) && ( 'hide' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Hide from site (set as draft)</option>
 					<option value="delete" <?php echo ( isset( $folksyShopOptions['folksy_unavailable_action'] ) && ( 'delete' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Delete from site (trash)</option>
 					<option value="nothing" <?php echo ( !isset( $folksyShopOptions['folksy_unavailable_action'] ) || ( 'nothing' == $folksyShopOptions['folksy_unavailable_action'] ) ) ? 'selected="selected"' : ''; ?>>Do nothing</option>
 				</select>
