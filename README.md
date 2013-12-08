@@ -9,7 +9,7 @@ Todo
 ----
 - ~~Add options pages to specify shop name, etc.~~
 - ~~Build WordPress shortcodes or provide template tags to help with outputting items in themes?~~
-- Mark items as no longer available if they do not show up in the Folksy feed.
+- ~~Mark items as no longer available if they do not show up in the Folksy feed.~~
 - ~~Download and attach images to items rather than facilitating hotlinking to Folksy's image CDN.~~
 - Check images when updating an item to add new images and remove images which have been removed from Folksy.
 - Check items are still included in shop sections when updating them.
