@@ -426,6 +426,26 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 								}
 							}
 							
+	 // Update the sections or categories which relate to this item. The easiest
+	 // way to do this is simply to remove the item from all sections and then
+	 // insert it into them again based on what Folksy told us...
+							wp_delete_object_term_relationships( $pageId, self::TAXONOMY_NAME );
+							if ( isset( $shopItem['section_id'] ) ) {
+								foreach ( $shopSections AS $shopSection ) {
+									if ( $shopSection->description == $shopItem['section_id'] ) {
+										wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
+										break;
+									}
+								}
+	 // For new shops: check if the item belongs in any shop collections...
+							} else if ( ( 'beta' == $folksyVersion ) && isset( $collectionItems ) ) {
+								foreach ( $collectionItems AS $termId => $items) {
+									if ( in_array( $shopItem['id'], $items ) ) {
+										wp_set_object_terms( $pageId, $termId, self::TAXONOMY_NAME, false );
+									}
+								}
+							}
+							
 	 // Record that we've seen this item...
 							$seenItemsList[] = $matchingItems[0]->ID;
 

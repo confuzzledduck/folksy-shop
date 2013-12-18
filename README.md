@@ -12,7 +12,7 @@ Todo
 - ~~Mark items as no longer available if they do not show up in the Folksy feed.~~
 - ~~Download and attach images to items rather than facilitating hotlinking to Folksy's image CDN.~~
 - Check images when updating an item to add new images and remove images which have been removed from Folksy.
-- Check items are still included in shop sections when updating them.
+- ~~Check items are still included in shop sections when updating them.~~
 
 Limitations
 -----------
