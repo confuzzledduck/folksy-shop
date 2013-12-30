@@ -122,7 +122,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   *
   * @since 0.1
   */
-		public function __desctruct() { }
+		public function __destruct() { }
 
  /* Init and WP specific hook methods, etc. */
  
