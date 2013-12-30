@@ -214,7 +214,6 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                              'rewrite' => array( 'slug' => 'folksy-section',
 			                                                                                  'with_front' => false,
 			                                                                                  'hierarchical' => false ) ) );
-$this->check_holiday('HeartmadeBeejoux', 'beta'); exit;
 
 		}
 
