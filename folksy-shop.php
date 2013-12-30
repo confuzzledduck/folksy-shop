@@ -143,7 +143,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 	 // Set up the options if we don't already have something. We do it this way
 	 // to stop the settings from autoloading...
 			if ( !get_option( 'folksy_shop_options' ) ) {
-				add_option( 'folksy_shop_options', array(), '', 'no' );
+				add_option( 'folksy_shop_options', array( 'remote' => array() ), '', 'no' );
 			}
 
 	 // WP cron...
@@ -214,6 +214,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                              'rewrite' => array( 'slug' => 'folksy-section',
 			                                                                                  'with_front' => false,
 			                                                                                  'hierarchical' => false ) ) );
+$this->check_holiday('HeartmadeBeejoux', 'beta'); exit;
 
 		}
 
@@ -227,13 +228,50 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		public function update_cron() {
 		
 			if ( ( $shopOptions = get_option( 'folksy_shop_options' ) ) && !empty( $shopOptions['folksy_username'] ) ) {
+
+	 // Options settings...
+				$shopOptions['remote']['folksy_shop_holiday'] = $this->fetch_folksy_holiday( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
+
+	 // Update items...
 				$this->update_sections( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
 				$this->update_items( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main', $shopOptions );
+
 			}
 		
 		}
 
  /* General functionality (the body of the plugin). */
+ 
+ /**
+  * Fetches the holiday staus of the given Folksy shop. Returns true if the shop
+	* is marked as on holiday on Folksy or false if it's not (ie. it's open for
+	* business).
+  *
+  * @since 0.1
+  * @param string $shopname The name of the shop to check the holiday status of.
+  * @param string $folksyVersion If this shop is an old ('main') shopfront or a new (October 2013) ('beta') shopfront.
+  */
+		public function fetch_folksy_holiday( $shopName, $folksyVersion = 'main' ) {
+
+			$shopHoliday = false;
+
+			if ( 'beta' == $folksyVersion ) {
+
+				if ( $shopMainPage = $this->_fetch_html( 'shops/'.$shopName, 'beta' ) ) {
+					$shopMainPage = str_replace(array("\r", "\n", '  '), '', $shopMainPage );
+					if ( preg_match( '/<div class=\"holiday-notice\">/', $shopMainPage ) ) {
+						$shopHoliday = true;
+					}
+				}
+
+			} else {
+				// I don't know how holiday mode is displayed in "old" shops, so...
+				$shopHoliday = false;
+			}
+
+			return $shopHoliday;
+
+		}
 
  /**
   * Fetches shop items from Folksy. Uses the Folksy JSON response so pretty
@@ -1010,5 +1048,25 @@ function folksy_link( $text = 'View on Folksy', $title = '', $before = '', $afte
 
 	$link = '<a href="'.get_folksy_link().'" title="'.$title.'">'.$text.'</a>';
 	echo $before.$link.$after;
+
+}
+
+ /**
+  * Returns true if the Folksy shop linked to this blog was on holiday the last
+  * time we checked for updated items.
+  *
+  * @since 0.1
+  * @return boolean True if the shop is on holiday, false if not.
+  */
+function is_folksy_holiday() {
+
+	$folksyOptions = get_option( 'folksy_shop_options' );
+		if ( isset( $folksyOptions['remote']['shop_holiday'] ) ) {
+			if ( true == $folksyOptions['remote']['folksy_shop_holiday'] ) {
+				return true;
+			}
+		}
+		
+		return false;
 
 }
