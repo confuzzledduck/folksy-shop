@@ -390,11 +390,29 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		public function fetch_item_images( $folksyItemId ) {
 
 			if ( $itemDetails = $this->_fetch_html( 'items/'.$folksyItemId ) ) {
-
 				$itemDetails = str_replace(array("\r", "\n", '  '), '', $itemDetails );
-				if ( preg_match_all( '/<img alt="" data-role="preview-image" src="\/\/(images.folksy.com\/[a-z0-9-]*)\/mini" \/>/i', $itemDetails, $images ) ) {
+			
+	 // Featured image...
+				if (preg_match( '/src="\/\/(images.folksy.com\/[a-z0-9-]+)\/main"/i', $itemDetails, $featuredImage )) {
+					$featuredImage = $featuredImage[1];
+				} else {
+					$featuredImage = null;
+				}
+
+	 // All item images...
+				if ( preg_match_all( '/<img alt="" data-role="preview-image" src="\/\/(images.folksy.com\/[a-z0-9-]+)\/mini" \/>/i', $itemDetails, $images ) ) {
 					if ( isset( $images[1] ) ) {
-						return $images[1];
+						$imagesArray = array();
+						foreach ( $images[1] AS $image ) {
+							if ( $image == $featuredImage ) {
+								$imagesArray[] = array( 'id' => $image,
+								                        'featured' => true );
+							} else {
+								$imagesArray[] = array( 'id' => $image,
+								                        'featured' => false );
+							}
+						}
+						return $imagesArray;
 					}
 				} else {
 				  return array();
@@ -529,7 +547,8 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 										$thumbnailSet = false;
 										$wpUploadDir = wp_upload_dir();
 										require_once( ABSPATH . 'wp-admin/includes/image.php' );
-										foreach ( $itemImages AS $folksyImageUrl ) {
+										foreach ( $itemImages AS $folksyImageDetails ) {
+											$folksyImageUrl = $folksyImageDetails['id'];
 											$fileUploadPath = $wpUploadDir['path'].'/'.substr( $folksyImageUrl, ( strpos( $folksyImageUrl, '/' ) + 1 ) ).'.jpg';
 											if ( copy( 'http://'.$folksyImageUrl, $fileUploadPath ) ) {
 												$fileTypeData = wp_check_filetype( basename( $fileUploadPath ) );
@@ -537,15 +556,18 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 												                                             'post_mime_type' => $fileTypeData['type'] ), $fileUploadPath, $pageId );
 												if ( $attachmentId != 0 ) {
 													wp_update_attachment_metadata( $attachmentId, wp_generate_attachment_metadata( $attachmentId, $fileUploadPath ) );
-													if ( false == $thumbnailSet ) {
-														$thumbnailSet = set_post_thumbnail( $pageId, $attachmentId );
+													if ( true == $folksyImageDetails['featured'] ) {
+														add_post_meta( $attachmentId, '_folksy_featured', true );
+														if ( false == $thumbnailSet ) {
+															$thumbnailSet = set_post_thumbnail( $pageId, $attachmentId );
+														}
 													}
 												}
 											}
 										}
 									}
 								}
-								
+
 							}
 							
 	 // Record that we've seen this item...
