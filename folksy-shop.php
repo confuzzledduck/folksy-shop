@@ -15,7 +15,7 @@
 #  folksy-shop.php
 #
 #  Created by Jonathon Wardman on 27-08-2013.
-#  Copyright 2013, Jonathon Wardman. All rights reserved.
+#  Copyright 2013 - 2014, Jonathon Wardman. All rights reserved.
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -488,7 +488,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 							if ( isset( $shopItem['section_id'] ) ) {
 								foreach ( $shopSections AS $shopSection ) {
 									if ( $shopSection->description == $shopItem['section_id'] ) {
-										wp_set_object_terms( $pageId, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
+										wp_set_object_terms( $matchingItems[0]->ID, (int) $shopSection->term_id, self::TAXONOMY_NAME, false );
 										break;
 									}
 								}
@@ -496,7 +496,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 							} else if ( ( 'beta' == $folksyVersion ) && isset( $collectionItems ) ) {
 								foreach ( $collectionItems AS $termId => $items) {
 									if ( in_array( $shopItem['id'], $items ) ) {
-										wp_set_object_terms( $pageId, $termId, self::TAXONOMY_NAME, false );
+										wp_set_object_terms( $matchingItems[0]->ID, $termId, self::TAXONOMY_NAME, true );
 									}
 								}
 							}
@@ -536,7 +536,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 								} else if ( ( 'beta' == $folksyVersion ) && isset( $collectionItems ) ) {
 									foreach ( $collectionItems AS $termId => $items) {
 										if ( in_array( $shopItem['id'], $items ) ) {
-											wp_set_object_terms( $pageId, $termId, self::TAXONOMY_NAME, false );
+											wp_set_object_terms( $pageId, $termId, self::TAXONOMY_NAME, true );
 										}
 									}
 								}
