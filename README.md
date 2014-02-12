@@ -16,6 +16,7 @@ Todo
 - Allow blog user to mark certain items as featured.
 - Allow ordering of items (rather than just reverse-Folksy order).
 - Proper admin area pages.
+- Allow the addition of 3rd party external links (ie. to Etsy) to items.
 
 Limitations
 -----------
