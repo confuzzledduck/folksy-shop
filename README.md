@@ -17,7 +17,7 @@ Todo
 - Allow ordering of items (rather than just reverse-Folksy order).
 - Proper admin area pages.
 - Allow the addition of 3rd party external links (ie. to Etsy) to items.
-- Remove linked media items when unlocking the Folksy user.
+- ~~Remove linked media items when unlocking the Folksy user.~~
 
 Limitations
 -----------

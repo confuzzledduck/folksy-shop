@@ -786,6 +786,13 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				                              'post_type' => self::POST_TYPE_NAME ) );
 				if ( count( $allItems ) > 0 ) {
 					foreach ( $allItems AS $item ) {
+						$attachments = get_children( array( 'post_parent' => $item->ID,
+						                                    'post_type' => 'attachment' ) );
+						if ( count( $attachments ) > 0 ) {
+							foreach ( $attachments AS $attachment ) {
+								wp_delete_attachment( $attachment->ID, true );
+							}
+						}
 						wp_delete_post( $item->ID, true );
 					}
 				}
