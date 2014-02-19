@@ -188,9 +188,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                 'menu_position' => 20, # Put the menu item below Pages and above Comments
 			                                                 'capability_type' => 'page', # For now we want this to behave like a page
 			                                                 'hierarchical' => false,
-			                                                 'supports' => array( 'author' => false,
-			                                                                      'excerpt' => false,
-			                                                                      'page-attrubutes' => false ),
+			                                                 'supports' => false,
 			                                                 'has_archive' => false, # Just to be explicit
 			                                                 'rewrite' => array( 'slug' => 'folksy',
 			                                                                     'with_front' => false,
@@ -862,6 +860,11 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   */
 		public function settings_menu() {
 
+	 // Remove the 'Add New' option from the 'Folksy Listings' menu...
+			global $submenu;
+			unset($submenu['edit.php?post_type='.self::POST_TYPE_NAME][10]);
+			
+	 // Add 'Folksy Shop' option to the settings menu...
 			add_submenu_page( 'options-general.php', 'Folksy Shop Settings', 'Folksy Shop', 'manage_options', 'folksy_shop', array( $this, 'settings_page' ) );
 
 		}
