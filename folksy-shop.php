@@ -594,6 +594,13 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 										                       'post_status' => 'draft' ) );
 									break;
 									case 'delete':
+										$attachments = get_children( array( 'post_parent' => $unavailableItem->ID,
+										                                    'post_type' => 'attachment' ) );
+										if ( count( $attachments ) > 0 ) {
+											foreach ( $attachments AS $attachment ) {
+												wp_delete_attachment( $attachment->ID, true );
+											}
+										}
 										wp_delete_post( $unavailableItem->ID );
 									break;
 								}
