@@ -75,6 +75,11 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * The name of the post type we create.
   */
 		const POST_TYPE_NAME = 'folksy_item';
+		
+ /**
+  * The name of the options element.
+  */
+		const OPTIONS_NAME = 'folksy_shop_options';
 
  /* Variables. */
 
@@ -142,8 +147,10 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 	 // Set up the options if we don't already have something. We do it this way
 	 // to stop the settings from autoloading...
-			if ( !get_option( 'folksy_shop_options' ) ) {
-				add_option( 'folksy_shop_options', array( 'remote' => array() ), '', 'no' );
+			if ( !get_option( self::OPTIONS_NAME ) ) {
+				add_option( self::OPTIONS_NAME, array( 'remote' => array(),
+				                                       'folksy_sections_slug' => 'folksy-section',
+				                                       'folksy_items_slug' => 'folksy' ), '', 'no' );
 			}
 
 	 // WP cron...
@@ -171,7 +178,8 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @since 0.1
   */
 		public function create_folksy_types() {
-
+		
+			$options = get_option( self::OPTIONS_NAME );
 			register_post_type( self::POST_TYPE_NAME, array( 'labels' => array( 'name' => 'Folksy Listings',
 			                                                                    'singular_name' => 'Folksy Listing',
 			                                                                    'all_items' => 'All Listings',
@@ -190,7 +198,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                 'hierarchical' => false,
 			                                                 'supports' => false,
 			                                                 'has_archive' => false, # Just to be explicit
-			                                                 'rewrite' => array( 'slug' => 'folksy',
+			                                                 'rewrite' => array( 'slug' => $options['folksy_items_slug'],
 			                                                                     'with_front' => false,
 			                                                                     'feeds' => true, # We want feeds even though we don't want archives
 			                                                                     'pages' => true ) ) );
@@ -209,7 +217,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                              'show_tagcloud' => false,
 			                                                              'hierarchical' => true,
 			                                                              'query_var' => 'folksy-section',
-			                                                              'rewrite' => array( 'slug' => 'folksy-section',
+			                                                              'rewrite' => array( 'slug' => $options['folksy_sections_slug'],
 			                                                                                  'with_front' => false,
 			                                                                                  'hierarchical' => false ) ) );
 
@@ -224,7 +232,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   */
 		public function update_cron() {
 		
-			if ( ( $shopOptions = get_option( 'folksy_shop_options' ) ) && !empty( $shopOptions['folksy_username'] ) ) {
+			if ( ( $shopOptions = get_option( self::OPTIONS_NAME ) ) && !empty( $shopOptions['folksy_username'] ) ) {
 
 	 // Options settings...
 				$shopOptions['remote']['folksy_shop_holiday'] = $this->fetch_folksy_holiday( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
@@ -431,7 +439,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @see FolksyShop::fetch_item_images
   * @param string $shopname The name of the shop to update items from.
   * @param string $folksyVersion If this shop is an old ('main') shopfront or a new (October 2013) ('beta') shopfront.
-  * @param array $additionalSettings Additional configuration options (the output of get_option( 'folksy_shop_options' ) will do nicely) for this update. Optional.
+  * @param array $additionalSettings Additional configuration options (the output of get_option( self::OPTIONS_NAME ) will do nicely) for this update. Optional.
   * @return boolean True on success, false if no items were found in the given Folksy shop.
   */
 		public function update_items( $shopName, $folksyVersion = 'main', array $additionalSettings = null ) {
@@ -766,7 +774,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   */
 		public function register_settings() {
 
-			register_setting( 'folksy_shop_options', 'folksy_shop_options', array( $this, 'sanitize_settings' ) );
+			register_setting( self::OPTIONS_NAME, self::OPTIONS_NAME, array( $this, 'sanitize_settings' ) );
 
 		}
 
@@ -781,7 +789,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   */
 		public function sanitize_settings( $settings ) {
 
-			$existingOptions = get_option( 'folksy_shop_options' );
+			$existingOptions = get_option( self::OPTIONS_NAME );
 
 	 // The username has been unlocked, so we'll wipe out all the currently stored
 	 // items and shop sections (you were warned!)...
@@ -847,6 +855,16 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 					break;
 				}
 			}
+			
+	 // Sections slug...
+			if ( isset( $settings['folksy_sections_slug'] ) ) {
+				$settings['folksy_sections_slug'] = sanitize_title($settings['folksy_sections_slug']);
+			}
+			
+	 // Items slug...
+			if ( isset( $settings['folksy_items_slug'] ) ) {
+				$settings['folksy_items_slug'] = sanitize_title($settings['folksy_items_slug']);
+			}
 
 			return $settings;
 
@@ -891,14 +909,22 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   */
 		public function settings_page() {
 
-			$folksyShopOptions = get_option( 'folksy_shop_options' );
+			$folksyShopOptions = get_option( self::OPTIONS_NAME );
 			$unlockFlag = get_transient( 'folksy_username_unlock' );
 			if ( 1 == $unlockFlag ) {
 			  delete_transient( 'folksy_username_unlock' );
 			}
-			if ( empty( $folksyShopOptions['folsky_username'] ) ) {
-				$folksyShopOptions['folsky_username'] = '';
+			if ( empty( $folksyShopOptions['folksy_username'] ) ) {
+				$folksyShopOptions['folksy_username'] = '';
 			}
+
+			if ( empty( $folksyShopOptions['folksy_sections_slug'] ) ) {
+				$folksyShopOptions['folksy_sections_slug'] = 'folksy-section';
+			}
+			if ( empty( $folksyShopOptions['folksy_items_slug'] ) ) {
+				$folksyShopOptions['folksy_items_slug'] = 'folksy';
+			}
+			
 			require_once( 'folksy-shop-settings.php' );
 
 		}
@@ -1098,7 +1124,7 @@ function folksy_link( $text = 'View on Folksy', $title = '', $before = '', $afte
   */
 function is_folksy_holiday() {
 
-	$folksyOptions = get_option( 'folksy_shop_options' );
+	$folksyOptions = get_option( self::OPTIONS_NAME );
 		if ( isset( $folksyOptions['remote']['shop_holiday'] ) ) {
 			if ( true == $folksyOptions['remote']['folksy_shop_holiday'] ) {
 				return true;

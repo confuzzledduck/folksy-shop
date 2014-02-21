@@ -39,6 +39,18 @@
 				</select>
 			</td>
 		</tr>
+		<tr>
+			<th><label for="folksy_shop_options[folksy_sections_slug]">Shop sections URL</label></th>
+			<td>
+				<input type="text" name="folksy_shop_options[folksy_sections_slug]" value="<?php echo $folksyShopOptions['folksy_sections_slug']; ?>" />
+			</td>
+		</tr>
+		<tr>
+			<th><label for="folksy_shop_options[folksy_items_slug]">Shop items URL</label></th>
+			<td>
+				<input type="text" name="folksy_shop_options[folksy_items_slug]" value="<?php echo $folksyShopOptions['folksy_items_slug']; ?>" />
+			</td>
+		</tr>
 	</table>
 	<p class="submit">
 		<?php settings_fields( 'folksy_shop_options' ); ?>
