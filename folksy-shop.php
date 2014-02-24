@@ -1076,7 +1076,7 @@ function get_folksy_price( $post = 0 ) {
   */
 function folksy_price( $before = '', $after = '' ) {
 
-	echo $before.'&pound;'.get_folksy_price().$after;
+	echo $before.esc_html( '&pound;'.get_folksy_price() ).$after;
 
 }
 
@@ -1110,7 +1110,7 @@ function folksy_link( $text = 'View on Folksy', $title = '', $before = '', $afte
 		$title = the_title_attribute( array( 'echo' => false ) );
 	}
 
-	$link = '<a href="'.get_folksy_link().'" title="'.$title.'">'.$text.'</a>';
+	$link = '<a href="'.esc_url( get_folksy_link() ).'" title="'.esc_attr( $title ).'">'.esc_html( $text ).'</a>';
 	echo $before.$link.$after;
 
 }
