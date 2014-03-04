@@ -116,6 +116,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			add_action( 'admin_menu', array( $this, 'settings_menu' ) );
 			add_filter( 'plugin_action_links', array( $this, 'settings_link' ), 10, 2 );
 
+	 // Add elements to Folksy listing editor...
+			add_action( 'add_meta_boxes_'.self::POST_TYPE_NAME, array( $this, 'item_meta_boxes' ), 10, 2 );
+
  /* Our own hooks. */
 	 // The hook for WP cron to update items from Folksy...
 			add_action( 'folksy-update-cron', array( $this, 'update_cron' ), 10, 1 );
@@ -670,6 +673,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 				$shopCollectionsArray = array();
 				$shopDetails = str_replace(array("\r", "\n", '  '), '', $shopDetails );
+				
 				if ( preg_match_all( '/<li class="collection">(.*?)<\/li>/', $shopDetails, $sections ) ) {
 
 					foreach ( $sections[1] AS $sectionSegment ) {
@@ -679,7 +683,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						}
 					}
 				}
-
+				
 				return $shopCollectionsArray;
 
 			} else {
@@ -926,6 +930,78 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			}
 			
 			require_once( 'folksy-shop-settings.php' );
+
+		}
+
+ /* Admin interface related functionality. */
+
+ /**
+  * Adds meta boxes to the item editor screen. As the post type does not support
+  * even the default elements but they are still used, we need to rebuild those
+  * boxes. Once that's done we'll add bespoke stuff, such as an Etsy link and
+  * featured products.
+  *
+  * @since 0.1
+  */
+		public function item_meta_boxes() {
+
+	 // Move the submit div down from its usual place to the bottom at the side...
+			remove_meta_box( 'submitdiv', self::POST_TYPE_NAME, 'side' );
+
+	 // Generate fixed item details (stuff fetched from Folksy)...
+			add_meta_box( 'itemdetails', 'Item Details', array( $this, 'item_content_print' ), self::POST_TYPE_NAME, 'normal', 'core' );
+			add_meta_box( 'itemimages', 'Item Images', array( $this, 'item_content_print' ), self::POST_TYPE_NAME, 'normal', 'core' );
+
+	 // Change the taxonomy box into just an output display box...
+			remove_meta_box( self::TAXONOMY_NAME.'div', self::POST_TYPE_NAME, 'normal' );
+			add_meta_box( self::TAXONOMY_NAME, 'Shop Sections', array( $this, 'item_content_print' ), self::POST_TYPE_NAME, 'side', 'low' );
+
+		}
+
+ /**
+  * Builds the various 'default' editor elements as plain, uneditable text.
+  *
+  * @since 0.1
+  */
+		public function item_content_print( $post, $additional ) {
+
+			switch ( $additional['id'] ) {
+				case 'itemdetails':
+					echo '<h4>'.esc_html( $post->post_title ).'</h4>'.PHP_EOL;
+					echo '<p>'.esc_html( $post->post_content ).'</p>'.PHP_EOL;
+					echo '<p>'.PHP_EOL;
+					echo '<strong>'.esc_html( 'Price: &pound;'.get_folksy_price( $post->ID ) ).'</strong><br />'.PHP_EOL;
+					echo '<strong><a href="'.esc_url( get_folksy_link( $post->ID ) ).'" target="_blank">'.esc_url( get_folksy_link( $post->ID ) ).'</a></strong>'.PHP_EOL;
+					echo '</p>'.PHP_EOL;
+				break;
+				case 'itemimages':
+					$thumbnailId = get_post_thumbnail_id( $post->ID );
+				  $itemImages = get_posts( array( 'post_type' => 'attachment',
+					                                'post_parent' => $post->ID,
+					                                'posts_per_page' => -1 ) );
+					if ( count( $itemImages ) > 0 ) {
+						foreach ( $itemImages AS $itemImage ) {
+						  if ( $itemImage->ID == $thumbnailId ) {
+								echo wp_get_attachment_image( $itemImage->ID, 'thumbnail', false, array( 'style' => 'border: 2px solid yellow;' ) ).PHP_EOL;
+							} else {
+								echo wp_get_attachment_image( $itemImage->ID, 'thumbnail', false, array( 'style' => 'border: 2px solid white;' ) ).PHP_EOL;
+							}
+						}
+					} else {
+						echo 'No images found.';
+					}
+				break;
+				case self::TAXONOMY_NAME:
+					$shopSections = wp_get_object_terms( $post->ID, self::TAXONOMY_NAME );
+					if ( !empty( $shopSections ) && !is_wp_error( $shopSections ) ) {
+					    echo '<ul>'.PHP_EOL;
+					    foreach ( $shopSections as $shopSection ) {
+					      echo '<li><a href="'.esc_url( get_term_link( $shopSection->slug, self::TAXONOMY_NAME ) ).'">'.esc_html( $shopSection->name ).'</a></li>'.PHP_EOL;
+					    }
+					    echo '</ul>'.PHP_EOL;
+					}
+				break;
+			}
 
 		}
 		
