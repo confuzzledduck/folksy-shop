@@ -118,6 +118,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 	 // Add elements to Folksy listing editor...
 			add_action( 'add_meta_boxes_'.self::POST_TYPE_NAME, array( $this, 'item_meta_boxes' ), 10, 2 );
+			
+	 // Handle save post...
+			add_action( 'save_post', array( $this, 'save_post' ) );
 
  /* Our own hooks. */
 	 // The hook for WP cron to update items from Folksy...
@@ -947,6 +950,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 	 // Move the submit div down from its usual place to the bottom at the side...
 			remove_meta_box( 'submitdiv', self::POST_TYPE_NAME, 'side' );
+			add_meta_box( 'submitdiv', 'Save Item', 'post_submit_meta_box', self::POST_TYPE_NAME, 'side', 'low' );
 
 	 // Generate fixed item details (stuff fetched from Folksy)...
 			add_meta_box( 'itemdetails', 'Item Details', array( $this, 'item_content_print' ), self::POST_TYPE_NAME, 'normal', 'core' );
@@ -955,6 +959,9 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 	 // Change the taxonomy box into just an output display box...
 			remove_meta_box( self::TAXONOMY_NAME.'div', self::POST_TYPE_NAME, 'normal' );
 			add_meta_box( self::TAXONOMY_NAME, 'Shop Sections', array( $this, 'item_content_print' ), self::POST_TYPE_NAME, 'side', 'low' );
+
+	 // Additional details and extra meta boxes...
+			add_meta_box( 'etsy-link', 'Etsy Link', array( $this, 'item_etsy_link_box' ), self::POST_TYPE_NAME, 'side', 'default' );
 
 		}
 
@@ -1004,6 +1011,50 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			}
 
 		}
+
+ /**
+  * Builds the Etsy link input element of the edit item screen.
+  *
+  * @since 0.1
+  */
+		public function item_etsy_link_box( $post ) {
+
+	 // Include a nonce...
+			$etsyUrl = get_post_meta( $post->ID, '_etsy_link', true );
+			wp_nonce_field( self::POST_TYPE_NAME.'_etsy', self::POST_TYPE_NAME.'_etsy_nonce' );
+			echo '<input type="text" name="etsy_link" style="width: 100%;" value="'.( ( ! empty( $etsyUrl ) ) ? esc_url( $etsyUrl ) : '' ).'" />';
+
+		}
+		
+ /**
+  * Deals with additional meta data on post save.
+  *
+  * @since 0.1
+  */
+		public function save_post( $postId ) {
+		
+			if ( isset( $_POST['post_type'] ) && ( $_POST['post_type'] == self::POST_TYPE_NAME ) ) {
+			
+	 // Etsy link...
+				if ( empty( $_POST['etsy_link'] ) ) {
+					delete_post_meta( $postId, '_etsy_link' );
+				} else {
+					update_post_meta( $postId, '_etsy_link', $_POST['etsy_link'] );
+				}
+
+	 // Featured item...
+				if ( isset( $_POST['folksy_featured'] ) && ( 'true' == $_POST['folksy_featured'] ) ) {
+					update_post_meta( $postId, '_featured', 'true' );
+				} else {
+					update_post_meta( $postId, '_featured', 'false' );
+				}
+			
+			}
+
+			return $postId;
+
+		}
+
 		
  /* Protected and private methods for internal use only. */
 
