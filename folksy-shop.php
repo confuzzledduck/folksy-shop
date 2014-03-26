@@ -962,6 +962,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 	 // Additional details and extra meta boxes...
 			add_meta_box( 'etsy-link', 'Etsy Link', array( $this, 'item_etsy_link_box' ), self::POST_TYPE_NAME, 'side', 'default' );
+			add_meta_box( 'featured', 'Featured', array( $this, 'featured_box' ), self::POST_TYPE_NAME, 'side', 'default' );
 
 		}
 
@@ -1023,6 +1024,21 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			$etsyUrl = get_post_meta( $post->ID, '_etsy_link', true );
 			wp_nonce_field( self::POST_TYPE_NAME.'_etsy', self::POST_TYPE_NAME.'_etsy_nonce' );
 			echo '<input type="text" name="etsy_link" style="width: 100%;" value="'.( ( ! empty( $etsyUrl ) ) ? esc_url( $etsyUrl ) : '' ).'" />';
+
+		}
+		
+ /**
+  * Builds the featured item box box on the edit item screen.
+  *
+  * @since 0.1
+  */
+		public function featured_box( $post ) {
+
+	 // Include a nonce...
+			$featured = get_post_meta( $post->ID, '_featured', true );
+			wp_nonce_field( self::POST_TYPE_NAME.'_featured', self::POST_TYPE_NAME.'_featured_nonce' );
+			echo '<input type="checkbox" name="folksy_featured" value="true"'.( ( ! empty( $featured ) && ( 'true' == $featured ) ) ? ' checked="checked"' : '' ).' /> ';
+			echo 'Feature item (depending on theme)';
 
 		}
 		
