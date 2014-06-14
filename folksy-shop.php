@@ -81,6 +81,11 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   */
 		const OPTIONS_NAME = 'folksy_shop_options';
 
+ /**
+  * The name of the option which acts as a lock flag for updates.
+  */
+		const LOCK_NAME = 'folksy_shop_update_lock';
+		
  /* Variables. */
 
  /**
@@ -226,6 +231,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                              'rewrite' => array( 'slug' => $options['folksy_sections_slug'],
 			                                                                                  'with_front' => false,
 			                                                                                  'hierarchical' => false ) ) );
+//$this->update_cron();
 
 		}
 
@@ -239,14 +245,26 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 		public function update_cron() {
 		
 			if ( ( $shopOptions = get_option( self::OPTIONS_NAME ) ) && !empty( $shopOptions['folksy_username'] ) ) {
+				
+	 // Check if the lock exists. If it does then do nothing. If not then carry
+	 // out the update...
+				if ( false == get_option( self::LOCK_NAME ) ) {
+				
+	 // Add the update lock...
+					add_option( self::LOCK_NAME, time(), null, 'no' );
 
 	 // Options settings...
-				$shopOptions['remote']['folksy_shop_holiday'] = $this->fetch_folksy_holiday( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
+					$shopOptions['remote']['folksy_shop_holiday'] = $this->fetch_folksy_holiday( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
 
 	 // Update items...
-				$this->update_sections( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
-				$this->update_items( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main', $shopOptions );
+					$this->update_sections( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main' );
+					$this->update_items( $shopOptions['folksy_username'], ( true === $shopOptions['new_shop'] ) ? 'beta' : 'main', $shopOptions );
+					
+	 // Remove the update lock...
+					delete_option( self::LOCK_NAME );
 
+				}
+			
 			}
 		
 		}
@@ -279,7 +297,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				// I don't know how holiday mode is displayed in "old" shops, so...
 				$shopHoliday = false;
 			}
-
+			
 			return $shopHoliday;
 
 		}
@@ -449,7 +467,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * @return boolean True on success, false if no items were found in the given Folksy shop.
   */
 		public function update_items( $shopName, $folksyVersion = 'main', array $additionalSettings = null ) {
-
+		
 			$itemsFunction = ( 'beta' == $folksyVersion ) ? 'fetch_item_list_beta' : 'fetch_item_list';
 			if ( $shopItems = $this->$itemsFunction( $shopName ) ) {
 
@@ -1268,12 +1286,12 @@ function folksy_link( $text = 'View on Folksy', $title = '', $before = '', $afte
 function is_folksy_holiday() {
 
 	$folksyOptions = get_option( self::OPTIONS_NAME );
-		if ( isset( $folksyOptions['remote']['shop_holiday'] ) ) {
-			if ( true == $folksyOptions['remote']['folksy_shop_holiday'] ) {
-				return true;
-			}
+	if ( isset( $folksyOptions['remote']['shop_holiday'] ) ) {
+		if ( true == $folksyOptions['remote']['folksy_shop_holiday'] ) {
+			return true;
 		}
-		
-		return false;
+	}
+
+	return false;
 
 }
