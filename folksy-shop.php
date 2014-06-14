@@ -354,7 +354,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				if ( $shopDetails = $this->_fetch_html( 'shops/'.$shopName.'/items?page='.$page++, 'beta' ) ) {
 
 					$shopDetails = str_replace(array("\r", "\n", '  '), '', $shopDetails );
-					if ( preg_match_all( '/<li class="item">(.*?)<\/li>/', $shopDetails, $items ) ) {
+					if ( preg_match_all( '/<li class="item in-stock">(.*?)<\/li>/', $shopDetails, $items ) ) {
 						$itemCount = count( $items[1] );
 						if ( $itemCount > 0 ) {
 							foreach ( $items[1] AS $itemSegment ) {
