@@ -373,6 +373,10 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 							break;
 						}
 					}
+					
+					if ($page > 100) {
+						break;
+					}
 
 				} else {
 					break;
