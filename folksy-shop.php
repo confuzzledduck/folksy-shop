@@ -231,7 +231,6 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 			                                                              'rewrite' => array( 'slug' => $options['folksy_sections_slug'],
 			                                                                                  'with_front' => false,
 			                                                                                  'hierarchical' => false ) ) );
-//$this->update_cron();
 
 		}
 
@@ -358,7 +357,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						$itemCount = count( $items[1] );
 						if ( $itemCount > 0 ) {
 							foreach ( $items[1] AS $itemSegment ) {
-								if ( preg_match( '/<a href="http:\/\/folksy.com\/items\/(\d+)-[a-z0-1-]+"><span class="image"><img alt=".+" item_prop="image" src="(\/\/images.folksy.com\/[a-z0-9-]+)\/shopitem" \/><\/span><div class="text"><h2 itemprop="name">(.+)<\/h2><p><span itemprop="price">.+?([\d\.]+)<\/span>(\d{1,3}) in stock<\/p><\/div><\/a>/i', $itemSegment, $itemDetails ) ) {
+								if ( preg_match( '/<a data-item-id="\d+" href="http:\/\/folksy.com\/items\/(\d+)-[a-z0-1-]+"><span class="image"><img alt=".+" item_prop="image" src="(\/\/images.folksy.com\/[a-z0-9-]+)\/shopitem" \/><\/span><div class="text"><h2 itemprop="name">(.+)<\/h2>.+<p><span itemprop="price">.+?([\d\.]+)<\/span>(\d{1,3}) in stock<\/p><\/div><\/a>/i', $itemSegment, $itemDetails ) ) {
 									$shopItemsArray[] = array( 'id' => $itemDetails[1],
 									                           'image' => $itemDetails[2],
 									                           'title' => html_entity_decode( $itemDetails[3] ),
@@ -372,10 +371,6 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						} else {
 							break;
 						}
-					}
-					
-					if ($page > 100) {
-						break;
 					}
 
 				} else {
@@ -698,7 +693,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 
 				$shopCollectionsArray = array();
 				$shopDetails = str_replace(array("\r", "\n", '  '), '', $shopDetails );
-				
+
 				if ( preg_match_all( '/<li class="collection">(.*?)<\/li>/', $shopDetails, $sections ) ) {
 
 					foreach ( $sections[1] AS $sectionSegment ) {
@@ -735,11 +730,11 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 				if ( $collectionDetails = $this->_fetch_html( 'shops/'.$shopName.'/collections/'.$collectionId.'/items?page='.$page++, 'beta' ) ) {
 
 					$collectionDetails = str_replace(array("\r", "\n", '  '), '', $collectionDetails );
-					if ( preg_match_all( '/<li class="item">(.*?)<\/li>/', $collectionDetails, $items ) ) {
+					if ( preg_match_all( '/<li class="item in-stock">(.*?)<\/li>/', $collectionDetails, $items ) ) {
 						$itemCount = count( $items[1] );
 						if ( $itemCount > 0 ) {
 							foreach ( $items[1] AS $itemSegment ) {
-								if ( preg_match( '/<a href="http:\/\/folksy.com\/items\/(\d+)-[a-z0-1-]+">/i', $itemSegment, $itemDetails ) ) {
+								if ( preg_match( '/<a data-item-id="\d+" href="http:\/\/folksy.com\/items\/(\d+)-[a-z0-1-]+">/i', $itemSegment, $itemDetails ) ) {
 									$collectionItemsArray[] = $itemDetails[1];
 								}
 							}
