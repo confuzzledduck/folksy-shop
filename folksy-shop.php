@@ -373,6 +373,10 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						}
 					}
 
+					if ($page > 100) {
+						break;
+					}
+
 				} else {
 					break;
 				}
@@ -744,6 +748,10 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 						} else {
 							break;
 						}
+					}
+
+					if ($page > 100) {
+						break;
 					}
 
 				} else {
