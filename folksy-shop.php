@@ -54,7 +54,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
   * currently on a different subdomain. Should include a trailing slash and
   * protocol (ie http://).
   */
-		const FOLSKY_BASE_URL_BETA = 'https://beta.folksy.com/';
+		const FOLSKY_BASE_URL_BETA = 'https://folksy.com/';
 
  /**
   * Plugin version number.
