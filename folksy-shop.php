@@ -360,7 +360,7 @@ if ( !class_exists( 'Folksy_Shop' ) ) {
 								if ( preg_match( '/<a data-item-id="\d+" href="http:\/\/folksy.com\/items\/(\d+)-[a-z0-1-]+"><span class="image"><img alt=".+" item_prop="image" src="(\/\/images.folksy.com\/[a-z0-9-]+)\/shopitem" \/><\/span><div class="text"><h2 itemprop="name">(.+)<\/h2>.+<p><span itemprop="price">.+?([\d\.]+)<\/span>(\d{1,3}) in stock<\/p><\/div><\/a>/i', $itemSegment, $itemDetails ) ) {
 									$shopItemsArray[] = array( 'id' => $itemDetails[1],
 									                           'image' => $itemDetails[2],
-									                           'title' => html_entity_decode( $itemDetails[3] ),
+									                           'title' => html_entity_decode( trim( $itemDetails[3] ) ),
 									                           'price' => $itemDetails[4] * 100,
 									                           'quantity' => $itemDetails[5] );
 								}
@@ -1235,7 +1235,7 @@ function get_folksy_price( $post = 0 ) {
 }
 
  /**
-  * Display the price for an item preceeded by a pound sign (£). Must be called
+  * Display the price for an item preceeded by a pound sign (ï¿½). Must be called
   * from inside "The Loop".
   *
   * @since 0.1
